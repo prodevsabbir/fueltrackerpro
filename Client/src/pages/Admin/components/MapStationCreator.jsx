@@ -17,8 +17,8 @@ L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, 
 
 const FUEL_TYPES = ['Octane', 'Diesel', 'Petrol', 'CNG', 'LPG', 'EV Charging', 'Kerosene', 'Others'];
 const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
 ];
 
