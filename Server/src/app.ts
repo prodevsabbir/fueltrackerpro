@@ -29,13 +29,21 @@ app.set("etag", false);
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://localhost:5173",
-      config.frontendUrl,
-      "https://fuel-tracker-kappa.vercel.app"
-    ],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const staticAllowed = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:5173",
+        config.frontendUrl,
+        "https://fuel-tracker-kappa.vercel.app",
+      ];
+      const isVercelPreview = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+      if (staticAllowed.includes(origin) || isVercelPreview) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
@@ -43,16 +51,21 @@ app.use(
 // Force strict CORS headers as a fallback
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin && [
-    "http://localhost:3000", 
-    "http://localhost:3001", 
-    "http://localhost:5173", 
-    config.frontendUrl, 
-    "https://fuel-tracker-kappa.vercel.app"
-  ].includes(origin)) {
+  const staticAllowed = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:5173",
+    config.frontendUrl,
+    "https://fuel-tracker-kappa.vercel.app",
+  ];
+  const isVercelPreview =
+    typeof origin === "string" &&
+    /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+
+  if (origin && (staticAllowed.includes(origin) || isVercelPreview)) {
     res.header("Access-Control-Allow-Origin", origin);
   } else {
-    res.header("Access-Control-Allow-Origin", "https://fuel-tracker-kappa.vercel.app");
+    res.header("Access-Control-Allow-Origin", config.frontendUrl);
   }
   res.header("Access-Control-Allow-Credentials", "true");
   next();

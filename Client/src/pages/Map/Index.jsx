@@ -20,8 +20,38 @@ delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow });
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org';
+
+const fetchOverpass = async (query) => {
+  const body = new URLSearchParams({ data: query }).toString();
+  let lastError = null;
+
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          Accept: 'application/json',
+        },
+        body,
+      });
+      if (!response.ok) {
+        throw new Error(`Overpass ${response.status}`);
+      }
+      return await response.json();
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error('Overpass unavailable');
+};
 
 const FUEL_TYPES = ['Octane', 'Diesel', 'Petrol', 'CNG', 'LPG', 'EV Charging', 'Kerosene', 'Others'];
 
@@ -211,10 +241,9 @@ const MapPage = () => {
       // 1. Parallel Fetch: Get DB stations and External discoveries at the same time
       const [dbResult, overpassResponse] = await Promise.allSettled([
         stationService.getNearbyStations(lat, lng, 20),
-        fetch(OVERPASS_URL, { 
-          method: 'POST', 
-          body: `[out:json][timeout:25];(node["amenity"~"fuel|charging_station|car_repair"](around:${(radius + 5) * 1000},${lat},${lng});way["amenity"~"fuel|charging_station|car_repair"](around:${(radius + 5) * 1000},${lat},${lng}););out center;` 
-        }).then(res => res.json())
+        fetchOverpass(
+          `[out:json][timeout:25];(node["amenity"~"fuel|charging_station|car_repair"](around:${(radius + 5) * 1000},${lat},${lng});way["amenity"~"fuel|charging_station|car_repair"](around:${(radius + 5) * 1000},${lat},${lng}););out center;`
+        )
       ]);
 
       const freshStations = dbResult.status === 'fulfilled' ? dbResult.value : [];
@@ -525,7 +554,7 @@ const MapPage = () => {
     <div className="fixed top-14 md:top-16 left-0 right-0 bottom-0 bg-white overflow-hidden z-[50]">
       <div className="w-full h-full relative overflow-hidden">
         <MapContainer center={[23.8103, 90.4125]} zoom={13} className="h-full w-full absolute inset-0" zoomControl={false} style={{ height: '100%', width: '100%', position: 'absolute' }}>
-          <TileLayer url="http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}" subdomains={['mt0', 'mt1', 'mt2', 'mt3']} attribution='&copy; Google Maps' />
+          <TileLayer url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}" subdomains={['mt0', 'mt1', 'mt2', 'mt3']} attribution='&copy; Google Maps' />
           <MapController userPos={userPos} onMapMove={(lat, lng) => refreshMapData(lat, lng)} />
           {userPos && <Circle center={userPos} radius={radius * 1000} pathOptions={{ fillColor: '#3b82f6', fillOpacity: 0.1, color: '#3b82f6', weight: 2, dashArray: '8, 8' }} />}
           {userPos && <Marker position={userPos} icon={createUserIcon(isMobile)} />}
@@ -713,7 +742,7 @@ const MapPage = () => {
                 {/* Map Picker - Half height on mobile */}
                 <div className="h-1/3 md:h-full md:w-[60%] relative bg-slate-100 border-b md:border-b-0 md:border-r border-slate-100">
                   <MapContainer center={[consoleModal.station.lat, consoleModal.station.lng]} zoom={16} className="h-full w-full" zoomControl={false}>
-                    <TileLayer url="http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}" subdomains={['mt0', 'mt1', 'mt2', 'mt3']} />
+                    <TileLayer url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}" subdomains={['mt0', 'mt1', 'mt2', 'mt3']} />
                     <MiniMapPicker 
                       isMobile={isMobile}
                       position={[consoleModal.station.lat, consoleModal.station.lng]} 

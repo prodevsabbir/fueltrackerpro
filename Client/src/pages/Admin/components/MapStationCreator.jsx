@@ -16,6 +16,35 @@ delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow });
 
 const FUEL_TYPES = ['Octane', 'Diesel', 'Petrol', 'CNG', 'LPG', 'EV Charging', 'Kerosene', 'Others'];
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+
+const fetchOverpass = async (query) => {
+  const body = new URLSearchParams({ data: query }).toString();
+  let lastError = null;
+
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          Accept: 'application/json',
+        },
+        body,
+      });
+      if (!response.ok) throw new Error(`Overpass ${response.status}`);
+      return await response.json();
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error('Overpass unavailable');
+};
 
 const parseCoords = (location) => {
   if (!location?.coordinates) return null;
@@ -214,8 +243,7 @@ const MapStationCreator = ({ isOpen, onClose, onCreated }) => {
     const radiusMeters = (radius + 5) * 1000;
     const query = `[out:json][timeout:25];(node["amenity"~"fuel|charging_station|car_repair"](around:${radiusMeters},${centerLat},${centerLng});way["amenity"~"fuel|charging_station|car_repair"](around:${radiusMeters},${centerLat},${centerLng}););out center;`;
     try {
-      const response = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query });
-      const data = await response.json();
+      const data = await fetchOverpass(query);
       const disc = (data.elements || [])
         .map(e => ({ 
           id: e.id, 
@@ -350,7 +378,7 @@ const MapStationCreator = ({ isOpen, onClose, onCreated }) => {
               {/* Left: Map Picker */}
               <div className="w-[60%] relative bg-slate-100">
                 <MapContainer center={[station.lat, station.lng]} zoom={13} className="h-full w-full" zoomControl={false}>
-                  <TileLayer url="http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}" subdomains={['mt0', 'mt1', 'mt2', 'mt3']} />
+                  <TileLayer url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}" subdomains={['mt0', 'mt1', 'mt2', 'mt3']} />
                   <MiniMapPicker 
                     position={[station.lat, station.lng]} 
                     radius={radius}
