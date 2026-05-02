@@ -20,6 +20,8 @@ delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow });
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+const OVERPASS_URL = import.meta.env.VITE_OVERPASS_URL || 'https://overpass-api.de/api/interpreter';
+const NOMINATIM_URL = import.meta.env.VITE_NOMINATIM_URL || 'https://nominatim.openstreetmap.org';
 
 const FUEL_TYPES = ['Octane', 'Diesel', 'Petrol', 'CNG', 'LPG', 'EV Charging', 'Kerosene', 'Others'];
 
@@ -143,7 +145,7 @@ const MiniMapPicker = ({ position, onPick, onStartFetching, isMobile = false }) 
        const lng = e.latlng.lng;
        onStartFetching?.(lat, lng);
        try {
-         const res = await fetch(`${import.meta.env.VITE_NOMINATIM_URL}/reverse?format=json&lat=${lat}&lon=${lng}`);
+         const res = await fetch(`${NOMINATIM_URL}/reverse?format=json&lat=${lat}&lon=${lng}`);
          const data = await res.json();
          const addr = data.address || {};
          const street = data.display_name.split(',')[0] || '';
@@ -209,7 +211,7 @@ const MapPage = () => {
       // 1. Parallel Fetch: Get DB stations and External discoveries at the same time
       const [dbResult, overpassResponse] = await Promise.allSettled([
         stationService.getNearbyStations(lat, lng, 20),
-        fetch(import.meta.env.VITE_OVERPASS_URL, { 
+        fetch(OVERPASS_URL, { 
           method: 'POST', 
           body: `[out:json][timeout:25];(node["amenity"~"fuel|charging_station|car_repair"](around:${(radius + 5) * 1000},${lat},${lng});way["amenity"~"fuel|charging_station|car_repair"](around:${(radius + 5) * 1000},${lat},${lng}););out center;` 
         }).then(res => res.json())
@@ -283,7 +285,7 @@ const MapPage = () => {
     const performDeepExtraction = async () => {
       setFetchingAddress(true);
       try {
-        const res = await fetch(`${import.meta.env.VITE_NOMINATIM_URL}/reverse?format=json&lat=${consoleModal.station.lat}&lon=${consoleModal.station.lng}`);
+        const res = await fetch(`${NOMINATIM_URL}/reverse?format=json&lat=${consoleModal.station.lat}&lon=${consoleModal.station.lng}`);
         const data = await res.json();
         const addr = data.address || {};
         const street = data.display_name.split(',')[0] || '';
@@ -332,7 +334,7 @@ const MapPage = () => {
     if (query.length < 3) { setSearchResults([]); return; }
     setSearching(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_NOMINATIM_URL}/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=bd`);
+      const res = await fetch(`${NOMINATIM_URL}/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=bd`);
       const data = await res.json();
       setSearchResults(data);
     } catch (err) {} finally { setSearching(false); }
