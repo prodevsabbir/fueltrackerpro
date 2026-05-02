@@ -68,6 +68,7 @@ const config = {
 
   /* ================= Frontend ================= */
   frontendUrl: process.env.FRONTEND_URL ?? "https://fueltrackerpro.vercel.app",
+  backendUrl: process.env.BACKEND_URL,
 
   /* ================= Rate Limit ================= */
   rateLimit: {

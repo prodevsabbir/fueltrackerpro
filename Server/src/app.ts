@@ -25,16 +25,17 @@ if (config.env === "development") {
 }
 
 app.use(
-  cors({
+    cors({
     origin: [
-      "*",
       "http://localhost:3000",
       "http://localhost:3001",
       "http://localhost:5173",
-      config.frontendUrl
+      "https://fuel-tracker-kappa.vercel.app",
+      config.frontendUrl, 
     ],
     credentials: true,
-  }),
+  })
+
 );
 // app.post(
 //   "/api/v1/payment/webhook",

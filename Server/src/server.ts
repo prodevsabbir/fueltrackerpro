@@ -11,6 +11,20 @@ connectDatabase()
   .then(() => {
     server.listen(config.port, () => {
       console.log(chalk.green(`Server running at http://localhost:${PORT}`));
+      
+      // Start self-ping cron job to prevent Render from sleeping
+      const pingUrl = config.backendUrl 
+        ? `${config.backendUrl}/api/v1/ping`
+        : `http://localhost:${PORT}/api/v1/ping`;
+
+      setInterval(async () => {
+        try {
+          const res = await fetch(pingUrl);
+          if (res.ok) console.log(chalk.blue(`[CRON] Self-ping successful: ${new Date().toISOString()}`));
+        } catch (err) {
+          console.error(chalk.yellow(`[CRON] Self-ping failed`), err);
+        }
+      }, 14 * 60 * 1000); // 14 minutes
     });
   })
   .catch((error: unknown) => {
