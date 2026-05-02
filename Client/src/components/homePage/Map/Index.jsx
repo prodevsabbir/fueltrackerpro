@@ -120,7 +120,7 @@ const MapView = () => {
             
             // 🗺️ REVERSE GEOCODING: Fetch current place name
             try {
-              const geoRes = await fetch(`${import.meta.env.VITE_NOMINATIM_URL}/reverse?format=json&lat=${lat}&lon=${lng}`);
+              const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
               const geoData = await geoRes.json();
               const name = geoData.address.suburb || geoData.address.neighbourhood || geoData.address.city || geoData.address.state || "Nearby";
               setLocationName(name.toUpperCase());
