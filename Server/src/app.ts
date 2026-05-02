@@ -24,19 +24,40 @@ if (config.env === "development") {
   app.use(morgan("short"));
 }
 
+// Disable ETag to prevent 304 Not Modified caching issues which strip CORS headers
+app.set("etag", false);
+
 app.use(
-    cors({
+  cors({
     origin: [
       "http://localhost:3000",
       "http://localhost:3001",
       "http://localhost:5173",
-      "https://fuel-tracker-kappa.vercel.app",
-      config.frontendUrl, 
+      config.frontendUrl,
+      "https://fuel-tracker-kappa.vercel.app"
     ],
     credentials: true,
-  })
-
+  }),
 );
+
+// Force strict CORS headers as a fallback
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && [
+    "http://localhost:3000", 
+    "http://localhost:3001", 
+    "http://localhost:5173", 
+    config.frontendUrl, 
+    "https://fuel-tracker-kappa.vercel.app"
+  ].includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  } else {
+    res.header("Access-Control-Allow-Origin", "https://fuel-tracker-kappa.vercel.app");
+  }
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 // app.post(
 //   "/api/v1/payment/webhook",
 //   express.raw({ type: "application/json" }),
