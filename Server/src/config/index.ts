@@ -67,7 +67,7 @@ const config = {
   geminiApiKey: process.env.GEMINI_API_KEY as string,
 
   /* ================= Frontend ================= */
-  frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:3000",
+  frontendUrl: process.env.FRONTEND_URL ?? "https://fueltrackerpro.vercel.app",
 
   /* ================= Rate Limit ================= */
   rateLimit: {
