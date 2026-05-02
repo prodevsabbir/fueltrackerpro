@@ -32,12 +32,16 @@ const fetchOverpass = async (query) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-          Accept: 'application/json',
+          Accept: '*/*',
         },
         body,
       });
-      if (!response.ok) throw new Error(`Overpass ${response.status}`);
-      return await response.json();
+      if (!response.ok) {
+        const errText = await response.text().catch(() => '');
+        throw new Error(`Overpass ${response.status}${errText ? `: ${errText.slice(0, 180)}` : ''}`);
+      }
+      const text = await response.text();
+      return JSON.parse(text);
     } catch (err) {
       lastError = err;
     }
