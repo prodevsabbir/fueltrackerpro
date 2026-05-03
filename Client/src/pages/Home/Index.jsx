@@ -11,7 +11,7 @@ const Home = () => {
   return (
     <div className="flex flex-col items-center w-full min-h-screen bg-[#FAFAFB]">
       {/* Main Content Area */}
-      <div className="w-full max-w-7xl px-2 md:px-4 pt-4 md:pt-24 pb-8 md:pb-16 flex flex-col items-center">
+      <div className="w-full max-w-7xl px-2 md:px-4 pt-20 md:pt-24 pb-8 md:pb-16 flex flex-col items-center">
 
         
         {/* Banner Section */}

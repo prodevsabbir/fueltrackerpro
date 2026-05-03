@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Plus, Loader2, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminService } from '../../../helpers/adminService';
 import { toast } from 'react-toastify';
 import { StatCard, PageBtn } from './SharedAdminUI';
+import { StatCardSkeleton, TableSkeleton, MobileCardSkeleton } from './Skeleton';
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
@@ -74,10 +75,16 @@ const ManageUsers = () => {
        
        {/* Top Stats Cards */}
        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="TOTAL" value={stats?.totalUsers || 0} color="border-slate-200" />
-          <StatCard title="ACTIVE" value={stats?.activeUsers || 0} color="border-emerald-500" />
-          <StatCard title="SUSPENDED" value={(stats?.totalUsers || 0) - (stats?.activeUsers || 0)} color="border-red-500" />
-          <StatCard title="NEW THIS MONTH" value={0} color="border-blue-500" />
+          {loading && !stats ? (
+            Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+          ) : (
+            <>
+              <StatCard title="TOTAL" value={stats?.totalUsers || 0} color="border-slate-200" />
+              <StatCard title="ACTIVE" value={stats?.activeUsers || 0} color="border-emerald-500" />
+              <StatCard title="SUSPENDED" value={(stats?.totalUsers || 0) - (stats?.activeUsers || 0)} color="border-red-500" />
+              <StatCard title="NEW THIS MONTH" value={0} color="border-blue-500" />
+            </>
+          )}
        </div>
 
        {/* Toolbar */}
@@ -130,7 +137,7 @@ const ManageUsers = () => {
                 </thead>
                 <tbody className="text-sm font-bold text-slate-700 divide-y divide-slate-100">
                    {loading ? (
-                     <tr><td colSpan="7" className="py-20 text-center"><Loader2 className="animate-spin text-amber-500 mx-auto" /></td></tr>
+                     <TableSkeleton rows={6} cols={7} />
                    ) : users.map(user => (
                      <tr key={user._id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-6 py-4">
@@ -184,7 +191,7 @@ const ManageUsers = () => {
           {/* Mobile Cards */}
           <div className="md:hidden divide-y divide-slate-100">
              {loading ? (
-               <div className="py-16 flex justify-center"><Loader2 className="animate-spin text-amber-500" /></div>
+               <MobileCardSkeleton count={5} />
              ) : users.length === 0 ? (
                <p className="py-16 text-center text-slate-400 text-xs font-black uppercase tracking-widest">No users found</p>
              ) : users.map(user => (

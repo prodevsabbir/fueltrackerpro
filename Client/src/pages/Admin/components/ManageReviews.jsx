@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Loader2, Star, Trash2, ChevronLeft, ChevronRight, MessageSquare, MapPin } from 'lucide-react';
+import { Search, Star, Trash2, ChevronLeft, ChevronRight, MessageSquare, MapPin } from 'lucide-react';
+import { TableSkeleton, MobileCardSkeleton } from './Skeleton';
 import { adminService } from '../../../helpers/adminService';
 import { toast } from 'react-toastify';
 import { PageBtn } from './SharedAdminUI';
@@ -83,7 +84,7 @@ const ManageReviews = () => {
             </thead>
             <tbody className="text-xs font-bold text-slate-700 divide-y divide-slate-50">
               {loading ? (
-                 <tr><td colSpan="5" className="py-16 text-center"><Loader2 className="animate-spin text-amber-500 mx-auto" /></td></tr>
+                 <TableSkeleton rows={6} cols={5} />
               ) : reviews.length > 0 ? reviews.map(review => (
                 <tr key={review._id} className="hover:bg-slate-50/60 transition-colors group">
                   <td className="px-4 py-3">
@@ -141,7 +142,7 @@ const ManageReviews = () => {
         {/* Mobile Cards */}
         <div className="md:hidden divide-y divide-slate-100">
           {loading ? (
-            <div className="py-14 flex justify-center"><Loader2 className="animate-spin text-amber-500" /></div>
+            <MobileCardSkeleton count={5} />
           ) : reviews.length === 0 ? (
             <p className="py-14 text-center text-slate-400 text-[10px] font-black uppercase">No reviews found</p>
           ) : reviews.map(review => (

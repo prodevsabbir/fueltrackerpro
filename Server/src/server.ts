@@ -24,7 +24,7 @@ connectDatabase()
         } catch (err) {
           console.error(chalk.yellow(`[CRON] Self-ping failed`), err);
         }
-      }, 14 * 60 * 1000); // 14 minutes
+      }, 8 * 60 * 1000); // 8 minutes
     });
   })
   .catch((error: unknown) => {

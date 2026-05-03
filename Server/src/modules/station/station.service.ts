@@ -58,16 +58,30 @@ const getAllStations = async (query: any, isAdmin: boolean = false) => {
   
   let filter: any = { isDeleted: false };
 
-  // 🛰️ PROXIMITY INTELLIGENCE: Filter by nearest location if lat/lng provided
+  // 🛰️ PROXIMITY INTELLIGENCE: Distance vs Value Sorting
   if (lat && lng) {
-    filter["location.geo"] = {
-      $geoWithin: {
-        $centerSphere: [
-          [Number(lng), Number(lat)],
-          50 / 6378.1 // 50km radius in radians
-        ]
-      }
-    };
+    if (sortBy === 'distance') {
+      // Intrinsic distance sorting (nearest to furthest)
+      filter["location.geo"] = {
+        $nearSphere: {
+          $geometry: {
+             type: "Point",
+             coordinates: [Number(lng), Number(lat)]
+          },
+          $maxDistance: 50 * 1000 // 50km in meters
+        }
+      };
+    } else {
+      // Filter by radius but allow custom sorting (like Price or Rating)
+      filter["location.geo"] = {
+        $geoWithin: {
+          $centerSphere: [
+            [Number(lng), Number(lat)],
+            50 / 6378.1 // 50km radius in radians
+          ]
+        }
+      };
+    }
   }
   
   // Privacy Logic: Public users only see approved stations
@@ -103,14 +117,34 @@ const getAllStations = async (query: any, isAdmin: boolean = false) => {
   }
   
   let sort: any = {};
-  if (sortBy === "rating") sort.rating = -1;
-  else if (sortBy === "price-low") sort["fuels.price"] = 1;
-  else if (sortBy === "price-high") sort["fuels.price"] = -1;
-  else sort.createdAt = -1;
+  if (sortBy === "distance" && lat && lng) {
+    // $nearSphere inherently sorts by distance, no need to pass a manual sort object
+    sort = undefined; 
+  } else if (sortBy === "rating") { 
+    sort.rating = -1; sort._id = 1; 
+  } else if (sortBy === "price-low") { 
+    sort["fuels.price"] = 1; sort._id = 1; 
+  } else if (sortBy === "price-high") { 
+    sort["fuels.price"] = -1; sort._id = 1; 
+  } else { 
+    sort.createdAt = -1; sort._id = 1; 
+  }
+
+  const countFilter = { ...filter };
+  if (countFilter["location.geo"]?.$nearSphere) {
+     countFilter["location.geo"] = {
+        $geoWithin: {
+          $centerSphere: [
+            [Number(lng), Number(lat)],
+            50 / 6378.1
+          ]
+        }
+     };
+  }
 
   const [stations, total] = await Promise.all([
     StationModel.find(filter).sort(sort).skip(skip).limit(Number(limit)).populate('createdBy', 'name points reputation totalDiscoveries rejectedDiscoveries'),
-    StationModel.countDocuments(filter)
+    StationModel.countDocuments(countFilter)
   ]);
 
   return {

@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/rootLayout/Navbar/Index';
 import { Fuel } from 'lucide-react';
 import { ToastContainer } from 'react-toastify';
@@ -29,12 +29,21 @@ const PageLoader = () => (
   </div>
 );
 
+// Pages that have their own full-screen layout (no global Navbar)
+const STANDALONE_ROUTES = ['/admin-dashboard'];
+
 function App() {
+  const location = useLocation();
+  const isStandalone = STANDALONE_ROUTES.some(r => location.pathname.startsWith(r));
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-amber-500/30 selection:text-amber-700 flex flex-col items-center">
       <LocationTracker />
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-      <Navbar />
+
+      {/* Only render the global Navbar on non-standalone pages */}
+      {!isStandalone && <Navbar />}
+
       <div className="w-full flex justify-center">
         <Suspense fallback={<PageLoader />}>
           <Routes>

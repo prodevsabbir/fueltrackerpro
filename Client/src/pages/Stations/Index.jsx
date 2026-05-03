@@ -1,27 +1,46 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Fuel, MapPin, Verified, Star, ArrowLeft, Search, Filter, ChevronLeft, ChevronRight, SlidersHorizontal, Navigation, Clock, Loader2, Globe } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { stationService } from '../../helpers/stationService';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
+
+// Haversine distance calculator
+const getDistance = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const d = R * c;
+  if (d < 1) return `${Math.round(d * 1000)}m`;
+  return `${d.toFixed(1)}km`;
+};
 
 const StationSkeleton = () => (
-  <div className="bg-white border border-slate-100 rounded-[32px] p-6 shadow-sm animate-pulse space-y-6">
+  <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-sm animate-pulse flex flex-col h-full space-y-3">
     <div className="flex justify-between items-start">
-      <div className="w-14 h-14 bg-slate-100 rounded-2xl"></div>
-      <div className="w-20 h-6 bg-slate-50 rounded-xl"></div>
+      <div className="w-10 h-10 md:w-11 md:h-11 bg-slate-100 rounded-2xl"></div>
+      <div className="w-16 h-5 bg-slate-50 rounded-lg"></div>
     </div>
-    <div className="space-y-3">
-      <div className="h-6 w-3/4 bg-slate-100 rounded-lg"></div>
-      <div className="h-4 w-1/2 bg-slate-50 rounded-lg"></div>
+    <div className="space-y-2 flex-1 pt-1">
+      <div className="h-4 md:h-5 w-3/4 bg-slate-100 rounded-lg"></div>
+      <div className="h-2 md:h-3 w-1/2 bg-slate-50 rounded-lg"></div>
     </div>
-    <div className="flex gap-2">
-      {[1, 2, 3, 4].map(i => <div key={i} className="h-12 flex-1 bg-slate-50 rounded-xl"></div>)}
-    </div>
-    <div className="pt-6 border-t border-slate-50 flex justify-between items-center">
-      <div className="w-24 h-10 bg-slate-100 rounded-xl"></div>
-      <div className="w-16 h-6 bg-slate-50 rounded-xl"></div>
+    <div className="pt-3 md:pt-4 border-t border-slate-50 flex justify-between items-center">
+      <div className="space-y-1">
+         <div className="w-10 h-2 bg-slate-50 rounded-md"></div>
+         <div className="w-16 md:w-20 h-5 md:h-6 bg-slate-100 rounded-lg"></div>
+      </div>
+      <div className="space-y-1.5 items-end flex flex-col">
+         <div className="w-14 h-4 bg-slate-50 rounded-md"></div>
+         <div className="w-16 h-3 bg-slate-50 rounded-md"></div>
+      </div>
     </div>
   </div>
 );
@@ -29,16 +48,20 @@ const StationSkeleton = () => (
 const Stations = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStatus, setActiveStatus] = useState('all');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('rating');
+  const [sortBy, setSortBy] = useState('distance');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 12;
+  
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationErrorShown, setLocationErrorShown] = useState(false);
 
   const categories = useMemo(() => [
     { id: 'all', name: 'ALL' },
@@ -46,6 +69,54 @@ const Stations = () => {
     { id: 'petrol', name: 'PETROL' },
     { id: 'diesel', name: 'DIESEL' }
   ], []);
+
+  const location = useLocation();
+
+  // ── SYNC SEARCH FROM URL ──
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchParam = params.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+      setCurrentPage(1);
+    }
+  }, [location.search]);
+
+  // ── INTELLIGENT LOCATION DETECTION ──
+  useEffect(() => {
+    const locateUser = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+          },
+          (error) => {
+            // Realtime failed -> Fallback to DB
+            if (user?.location?.coordinates) {
+              // DB stores [lng, lat]
+              setUserLocation({ lat: user.location.coordinates[1], lng: user.location.coordinates[0] });
+            } else if (!locationErrorShown) {
+              toast.warning("Please turn on location to find nearby stations accurately.", { autoClose: 5000 });
+              setLocationErrorShown(true);
+            }
+          }
+        );
+      } else {
+        // Fallback to DB
+        if (user?.location?.coordinates) {
+          setUserLocation({ lat: user.location.coordinates[1], lng: user.location.coordinates[0] });
+        } else if (!locationErrorShown) {
+          toast.warning("Location not supported. Please update profile or turn on GPS.", { autoClose: 5000 });
+          setLocationErrorShown(true);
+        }
+      }
+    };
+    
+    // Only attempt to get location if we don't have it
+    if (!userLocation) {
+      locateUser();
+    }
+  }, [user, locationErrorShown, userLocation]);
 
   const fetchStations = async () => {
     setLoading(true);
@@ -58,17 +129,24 @@ const Stations = () => {
         category: activeCategory !== 'all' ? activeCategory : undefined,
         sortBy
       };
+
+      // Add coordinates if available
+      if (userLocation?.lat && userLocation?.lng) {
+        params.lat = userLocation.lat;
+        params.lng = userLocation.lng;
+      }
       
       const response = await stationService.getAllStations(params);
       
-      // 🛡️ ADAPTIVE PARSING: Handle both direct arrays and { stations, meta } objects
+      // 🛡️ ADAPTIVE PARSING & CAPPING (Max 50 stations / 5 pages)
       if (Array.isArray(response)) {
         setStations(response);
         setTotalPages(1);
       } else if (response && response.stations) {
         setStations(response.stations);
         if (response.meta) {
-          setTotalPages(response.meta.totalPages || 1);
+          const maxAllowedPages = 5; // 5 pages * 10 items = 50 max
+          setTotalPages(Math.min(response.meta.totalPages || 1, maxAllowedPages));
         }
       } else {
         setStations([]);
@@ -83,7 +161,7 @@ const Stations = () => {
 
   useEffect(() => {
     fetchStations();
-  }, [currentPage, searchQuery, activeStatus, activeCategory, sortBy]);
+  }, [currentPage, searchQuery, activeStatus, activeCategory, sortBy, userLocation]);
 
   const formatTime = (isoString) => {
     if (!isoString) return "Just now";
@@ -102,7 +180,7 @@ const Stations = () => {
         {/* PREMIUM TACTICAL HEADER (Matching User Image) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/map')} className="w-10 h-10 md:w-12 md:h-12 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-400 flex items-center justify-center shadow-sm">
+            <button onClick={() => navigate(-1)} className="w-10 h-10 md:w-12 md:h-12 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-400 flex items-center justify-center shadow-sm">
               <ArrowLeft size={18} />
             </button>
             <div>
@@ -160,6 +238,7 @@ const Stations = () => {
               <div className="flex-1 md:flex-none flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm group hover:border-amber-500 transition-all">
                 <SlidersHorizontal size={14} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
                 <select value={sortBy} onChange={(e) => {setSortBy(e.target.value); setCurrentPage(1);}} className="bg-transparent border-none text-[9px] font-black text-slate-600 outline-none cursor-pointer uppercase tracking-widest w-full">
+                    <option value="distance">NEAREST FIRST</option>
                     <option value="rating">TOP RATED</option>
                     <option value="price-low">PRICE: LOW</option>
                     <option value="price-high">PRICE: HIGH</option>
@@ -169,9 +248,9 @@ const Stations = () => {
         </div>
 
         {/* STATIONS GRID - COMPACT & RESPONSIVE */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 mb-12">
           {loading ? (
-            Array.from({ length: 6 }).map((_, i) => <StationSkeleton key={i} />)
+            Array.from({ length: 12 }).map((_, i) => <StationSkeleton key={i} />)
           ) : (
             <AnimatePresence mode="popLayout">
               {stations.length > 0 ? stations.map((pump) => {
@@ -185,17 +264,17 @@ const Stations = () => {
                     animate={{ opacity: 1, scale: 1 }} 
                     exit={{ opacity: 0, scale: 0.9 }} 
                     onClick={() => navigate(`/stations/${pump._id}`)} 
-                    className="bg-white border border-slate-100 rounded-[32px] p-5 md:p-6 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all group cursor-pointer relative overflow-hidden flex flex-col h-full"
+                    className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group cursor-pointer relative overflow-hidden flex flex-col h-full"
                   >
                     <div className={`absolute top-0 left-0 w-1.5 h-full ${
                       pump.status === 'available' ? 'bg-emerald-500' : pump.status === 'limited' ? 'bg-amber-500' : 'bg-red-500'
                     }`}></div>
 
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="w-12 h-12 md:w-14 md:h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-amber-500 transition-all duration-300">
-                        <Fuel size={20} md:size={24} />
+                    <div className="flex justify-between items-start mb-3 md:mb-4">
+                      <div className="w-10 h-10 md:w-11 md:h-11 bg-slate-50 rounded-xl md:rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-amber-500 transition-all duration-300">
+                        <Fuel size={18} />
                       </div>
-                      <div className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest ${
+                      <div className={`px-2.5 py-1 rounded-lg text-[7px] font-black uppercase tracking-widest shadow-sm ${
                         pump.status === 'available' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
                         pump.status === 'limited' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 
                         'bg-red-50 text-red-600 border border-red-100'
@@ -205,29 +284,45 @@ const Stations = () => {
                     </div>
 
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight leading-tight group-hover:text-amber-600 transition-colors truncate">{pump.name}</h3>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <h3 className="text-sm md:text-base font-black text-slate-900 tracking-tight leading-tight group-hover:text-amber-600 transition-colors truncate">{pump.name}</h3>
                         {pump.verified && <Verified size={14} className="text-blue-500 flex-shrink-0" />}
                       </div>
-                      <p className="text-[10px] md:text-xs text-slate-400 font-bold flex items-center gap-1.5 line-clamp-1 mb-6">
-                        <MapPin size={12} className="text-slate-300" /> {pump.location.address}
+                      <p className="text-[9px] md:text-[10px] text-slate-400 font-bold flex items-center gap-1 line-clamp-1 mb-3 md:mb-4">
+                        <MapPin size={10} className="text-slate-300" /> {pump.location.subArea}, {pump.location.city}
                       </p>
                     </div>
 
-                    <div className="pt-5 border-t border-slate-50 flex items-center justify-between">
+                    <div className="pt-3 md:pt-4 border-t border-slate-50 flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-[7px] md:text-[8px] uppercase font-black text-slate-300 tracking-[0.2em] mb-1">
+                        <span className="text-[7px] md:text-[8px] uppercase font-black text-slate-300 tracking-[0.2em] mb-0.5">
                           {fuelInfo?.type || 'FUEL'}
                         </span>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-xl md:text-2xl font-black text-slate-900">৳ {fuelInfo?.price || '0'}</span>
+                          <span className="text-base md:text-lg font-black text-slate-900">৳ {fuelInfo?.price || '0'}</span>
                           <span className="text-[8px] font-bold text-slate-400">/L</span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center justify-end gap-1 bg-amber-50 px-2 py-1 rounded-lg mb-2 inline-flex">
-                           <Star size={10} className="text-amber-500" fill="currentColor" />
-                           <span className="text-[10px] font-black text-amber-700">{pump.rating || '4.5'}</span>
+                      <div className="text-right flex flex-col items-end gap-1.5">
+                        <div className="flex items-center justify-end gap-1.5">
+                           {userLocation && pump.location?.coordinates && (
+                             <div 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${pump.location.coordinates.lat},${pump.location.coordinates.lng}`, '_blank');
+                                }}
+                                className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg cursor-pointer transition-colors"
+                             >
+                                <Navigation size={9} className="text-blue-500" />
+                                <span className="text-[9px] md:text-[10px] font-black text-blue-700">
+                                  {getDistance(userLocation.lat, userLocation.lng, pump.location.coordinates.lat, pump.location.coordinates.lng)}
+                                </span>
+                             </div>
+                           )}
+                           <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg">
+                              <Star size={9} className="text-amber-500" fill="currentColor" />
+                              <span className="text-[9px] md:text-[10px] font-black text-amber-700">{pump.rating || '4.5'}</span>
+                           </div>
                         </div>
                         <p className="text-[8px] font-bold text-slate-400 flex items-center justify-end gap-1 uppercase tracking-wider">
                           <Clock size={8} /> {formatTime(pump.updatedAt)}

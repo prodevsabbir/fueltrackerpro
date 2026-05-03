@@ -54,8 +54,35 @@ const getAllReviews = async (query: any) => {
   };
 };
 
+const voteReview = async (reviewId: string, userId: string, type: 'up' | 'down') => {
+  const review = await ReviewModel.findById(reviewId);
+  if (!review) throw new CustomError(404, "Review not found");
+
+  const userObjectId = new Types.ObjectId(userId);
+  const alreadyUpvoted = review.upvotes.some(id => id.toString() === userId);
+  const alreadyDownvoted = review.downvotes.some(id => id.toString() === userId);
+
+  // Clear existing votes for this user
+  review.upvotes = review.upvotes.filter(id => id.toString() !== userId);
+  review.downvotes = review.downvotes.filter(id => id.toString() !== userId);
+
+  // If clicking the same button, it acts as a toggle (remove vote)
+  // If clicking different button, it switches the vote
+  if (type === 'up' && !alreadyUpvoted) {
+    review.upvotes.push(userObjectId);
+  } else if (type === 'down' && !alreadyDownvoted) {
+    review.downvotes.push(userObjectId);
+  }
+
+  await review.save();
+  return await ReviewModel.findById(review._id)
+    .populate("userId", "name email profileImage")
+    .populate("stationId", "name location");
+};
+
 export const reviewService = {
   createReview,
   getReviewsByStation,
-  getAllReviews
+  getAllReviews,
+  voteReview
 };

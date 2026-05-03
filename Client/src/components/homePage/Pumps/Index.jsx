@@ -6,6 +6,21 @@ import { useLanguage } from '../../../context/LanguageContext';
 import { StationCardSkeleton } from '../../shared/Skeleton';
 import { stationService } from '../../../helpers/stationService';
 
+// Haversine distance calculator
+const getDistance = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const d = R * c;
+  if (d < 1) return `${Math.round(d * 1000)}m`;
+  return `${d.toFixed(1)}km`;
+};
+
 const PumpList = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -14,7 +29,6 @@ const PumpList = () => {
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const isMobile = window.innerWidth < 768;
-
 
   const categories = useMemo(() => [
     { id: 'all', name: 'ALL' },
@@ -133,29 +147,29 @@ const PumpList = () => {
                     key={pump?._id} 
                     whileHover={{ y: -4 }}
                     onClick={() => navigate(`/stations/${pump?._id}`)}
-                    className="bg-white border border-slate-100 rounded-2xl md:rounded-[32px] p-4 md:p-6 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all group cursor-pointer relative overflow-hidden"
+                    className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all group cursor-pointer relative overflow-hidden"
                   >
                     {/* Status Indicator */}
                     <div className={`absolute top-0 left-0 w-1 md:w-1.5 h-full ${
                       pump?.status === 'available' ? 'bg-emerald-500' : pump?.status === 'limited' ? 'bg-amber-500' : 'bg-red-500'
                     }`}></div>
 
-                    <div className="flex justify-between items-start mb-4 md:mb-6">
-                      <div className="flex gap-3 md:gap-4">
-                        <div className="w-10 h-10 md:w-14 md:h-14 bg-slate-50 rounded-xl md:rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-amber-500 transition-all duration-300">
-                          <Fuel size={isMobile ? 18 : 24} />
+                    <div className="flex justify-between items-start mb-3 md:mb-4">
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 md:w-11 md:h-11 bg-slate-50 rounded-xl md:rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-amber-500 transition-all duration-300">
+                          <Fuel size={isMobile ? 18 : 20} />
                         </div>
                         <div>
-                          <div className="flex items-center gap-1.5 md:gap-2">
-                            <h3 className="text-sm md:text-lg font-black text-slate-900 tracking-tight group-hover:text-amber-600 transition-colors leading-tight">{pump?.name}</h3>
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="text-sm md:text-base font-black text-slate-900 tracking-tight group-hover:text-amber-600 transition-colors leading-tight">{pump?.name}</h3>
                             {pump?.verified && <Verified size={14} className="text-blue-500 flex-shrink-0" />}
                           </div>
-                          <p className="text-[9px] md:text-xs text-slate-400 font-bold flex items-center gap-1 mt-1 md:mt-1.5 line-clamp-1">
-                            <MapPin size={10} className="text-slate-300" /> {pump?.location?.address || 'Location not specified'}
+                          <p className="text-[9px] md:text-[10px] text-slate-400 font-bold flex items-center gap-1 mt-1 line-clamp-1">
+                            <MapPin size={10} className="text-slate-300" /> {pump?.location?.subArea}, {pump?.location?.city}
                           </p>
                         </div>
                       </div>
-                      <div className={`px-3 md:px-4 py-1 md:py-1.5 rounded-lg md:rounded-xl text-[7px] md:text-[9px] font-black uppercase tracking-widest shadow-sm ${
+                      <div className={`px-2.5 py-1 rounded-lg text-[7px] font-black uppercase tracking-widest shadow-sm ${
                         pump?.status === 'available' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
                         pump?.status === 'limited' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 
                         'bg-red-50 text-red-600 border border-red-100'
@@ -164,24 +178,40 @@ const PumpList = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 md:pt-6 border-t border-slate-50">
+                    <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-slate-50">
                       <div className="flex flex-col">
-                        <span className="text-[7px] md:text-[8px] uppercase font-black text-slate-300 tracking-[0.2em] mb-0.5 md:mb-1">
+                        <span className="text-[7px] md:text-[8px] uppercase font-black text-slate-300 tracking-[0.2em] mb-0.5">
                            {fuelInfo?.type || 'FUEL'}
                         </span>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-lg md:text-2xl font-black text-slate-900">৳ {fuelInfo?.price || '0'}</span>
-                          <span className="text-[8px] md:text-[10px] font-bold text-slate-400">/L</span>
+                          <span className="text-base md:text-lg font-black text-slate-900">৳ {fuelInfo?.price || '0'}</span>
+                          <span className="text-[8px] font-bold text-slate-400">/L</span>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-1 md:gap-2">
-                         <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg">
-                            <Star size={10} md:size={12} className="text-amber-500" fill="currentColor" />
-                            <span className="text-[9px] md:text-[11px] font-black text-amber-700">{pump?.rating || '4.5'}</span>
+                      <div className="flex flex-col items-end gap-1.5">
+                         <div className="flex items-center gap-1.5">
+                           {coords?.lat && coords?.lng && pump?.location?.coordinates && (
+                             <div 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(`https://www.google.com/maps/dir/?api=1&origin=${coords.lat},${coords.lng}&destination=${pump.location.coordinates.lat},${pump.location.coordinates.lng}`, '_blank');
+                                }}
+                                className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg cursor-pointer transition-colors"
+                             >
+                                <Navigation size={9} className="text-blue-500" />
+                                <span className="text-[9px] md:text-[10px] font-black text-blue-700">
+                                  {getDistance(coords.lat, coords.lng, pump.location.coordinates.lat, pump.location.coordinates.lng)}
+                                </span>
+                             </div>
+                           )}
+                           <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg">
+                              <Star size={9} className="text-amber-500" fill="currentColor" />
+                              <span className="text-[9px] md:text-[10px] font-black text-amber-700">{pump?.rating || '4.5'}</span>
+                           </div>
                          </div>
-                         <p className="text-[8px] md:text-[9px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-wider">
-                           <Clock size={8} md:size={10} className="text-slate-300" /> {formatTime(pump?.updatedAt)}
+                         <p className="text-[8px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-wider">
+                           <Clock size={8} className="text-slate-300" /> {formatTime(pump?.updatedAt)}
                          </p>
                       </div>
                     </div>

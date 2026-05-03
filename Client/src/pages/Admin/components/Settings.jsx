@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings as SettingsIcon, Shield, Database, Globe, Save, Mail, Phone, Key, AlertTriangle, Smartphone, UploadCloud, Loader2, X } from 'lucide-react';
+import { SettingsSkeleton } from './Skeleton';
 import { adminService } from '../../../helpers/adminService';
 import { toast } from 'react-toastify';
 
@@ -76,7 +77,7 @@ const Settings = () => {
   };
 
   if (loading) {
-    return <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-amber-500" /></div>;
+    return <SettingsSkeleton />;
   }
 
   return (

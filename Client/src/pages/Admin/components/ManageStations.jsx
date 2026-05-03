@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Loader2, MapPin, Edit3, Trash2, ChevronLeft, ChevronRight, Map, CheckCircle2, Eye, Activity, ShieldCheck, Clock, Check, X } from 'lucide-react';
+import { Search, MapPin, Edit3, Trash2, ChevronLeft, ChevronRight, Map, CheckCircle2, Eye, Activity, ShieldCheck, Clock, Check, X } from 'lucide-react';
+import { StatCardSkeleton, TableSkeleton, MobileCardSkeleton } from './Skeleton';
 import { BsFillFuelPumpFill } from 'react-icons/bs';
 import { io } from 'socket.io-client';
 import { stationService } from '../../../helpers/stationService';
@@ -111,7 +112,9 @@ const ManageStations = () => {
 
       {/* Stats — 2x2 on mobile, 4-col on desktop */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
+        {loading && stats.total === 0 ? (
+          Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+        ) : [
           { label: 'Total', value: stats.total,    icon: Activity,    bg: 'bg-slate-900' },
           { label: 'Verified', value: stats.verified, icon: ShieldCheck, bg: 'bg-emerald-500' },
           { label: 'Pending', value: stats.pending,  icon: Clock,       bg: 'bg-amber-500' },
@@ -184,7 +187,7 @@ const ManageStations = () => {
             </thead>
             <tbody className="text-xs font-bold text-slate-700 divide-y divide-slate-50">
               {loading ? (
-                <tr><td colSpan="5" className="py-16 text-center"><Loader2 className="animate-spin text-amber-500 mx-auto" /></td></tr>
+                <TableSkeleton rows={7} cols={5} />
               ) : stations.length === 0 ? (
                 <tr><td colSpan="5" className="py-16 text-center text-slate-400 text-[10px] font-black uppercase tracking-widest">No stations found</td></tr>
               ) : stations.map(station => (
@@ -244,7 +247,7 @@ const ManageStations = () => {
         {/* Mobile Cards */}
         <div className="md:hidden divide-y divide-slate-100">
           {loading ? (
-            <div className="py-14 flex justify-center"><Loader2 className="animate-spin text-amber-500" /></div>
+            <MobileCardSkeleton count={5} />
           ) : stations.length === 0 ? (
             <p className="py-14 text-center text-slate-400 text-[10px] font-black uppercase">No stations found</p>
           ) : stations.map(station => (

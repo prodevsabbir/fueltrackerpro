@@ -7,8 +7,11 @@ export interface IReview {
   comment: string;
   rating: number;
   isOverprice: boolean;
+  reportedIssues: string[];
   isVerified: boolean;
   isDeleted: boolean;
+  upvotes: Types.ObjectId[];
+  downvotes: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,8 +23,11 @@ const reviewSchema = new Schema<IReview>({
   comment: { type: String, required: true },
   rating: { type: Number, default: 0 },
   isOverprice: { type: Boolean, default: false },
+  reportedIssues: { type: [String], default: [] },
   isVerified: { type: Boolean, default: false },
-  isDeleted: { type: Boolean, default: false }
+  isDeleted: { type: Boolean, default: false },
+  upvotes: [{ type: Schema.Types.ObjectId, ref: "User", default: [] }],
+  downvotes: [{ type: Schema.Types.ObjectId, ref: "User", default: [] }]
 }, { timestamps: true });
 
 export const ReviewModel = model<IReview>("Review", reviewSchema);

@@ -3,9 +3,11 @@ import { motion } from 'framer-motion';
 import { Users, Fuel, CheckCircle2, Activity, TrendingUp, Star, Plus, AlertCircle } from 'lucide-react';
 import { adminService } from '../../../helpers/adminService';
 import { StatCard } from './SharedAdminUI';
+import { StatCardSkeleton, InsightCardSkeleton, Shimmer } from './Skeleton';
 
 const Overview = () => {
   const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -14,6 +16,8 @@ const Overview = () => {
         setStats(data);
       } catch (error) {
         console.error(error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchStats();
@@ -28,37 +32,60 @@ const Overview = () => {
     >
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <StatCard 
-          title="TOTAL USERS" 
-          value={stats?.totalUsers || 0} 
-          icon={<Users size={20} />} 
-          color="border-blue-500" 
-          detail={`${stats?.activeUsers || 0} Active Now`}
-        />
-        <StatCard 
-          title="VERIFIED STATIONS" 
-          value={stats?.verifiedStations || 0} 
-          icon={<CheckCircle2 size={20} />} 
-          color="border-emerald-500" 
-          detail={`${stats?.totalStations || 0} Total Stations`}
-        />
-        <StatCard 
-          title="PENDING APPROVAL" 
-          value={stats?.pendingStations || 0} 
-          icon={<AlertCircle size={20} />} 
-          color="border-amber-500" 
-          detail={`${stats?.rejectedStations || 0} Rejected`}
-        />
-        <StatCard 
-          title="SYSTEM HEALTH" 
-          value={stats?.serverHealth?.database?.status === 'operational' ? 'Stable' : 'Issues'} 
-          icon={<Activity size={20} />} 
-          color="border-slate-400" 
-          detail="All Systems Green"
-        />
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+        ) : (
+          <>
+            <StatCard 
+              title="TOTAL USERS" 
+              value={stats?.totalUsers || 0} 
+              icon={<Users size={20} />} 
+              color="border-blue-500" 
+              detail={`${stats?.activeUsers || 0} Active Now`}
+            />
+            <StatCard 
+              title="VERIFIED STATIONS" 
+              value={stats?.verifiedStations || 0} 
+              icon={<CheckCircle2 size={20} />} 
+              color="border-emerald-500" 
+              detail={`${stats?.totalStations || 0} Total Stations`}
+            />
+            <StatCard 
+              title="PENDING APPROVAL" 
+              value={stats?.pendingStations || 0} 
+              icon={<AlertCircle size={20} />} 
+              color="border-amber-500" 
+              detail={`${stats?.rejectedStations || 0} Rejected`}
+            />
+            <StatCard 
+              title="SYSTEM HEALTH" 
+              value={stats?.serverHealth?.database?.status === 'operational' ? 'Stable' : 'Issues'} 
+              icon={<Activity size={20} />} 
+              color="border-slate-400" 
+              detail="All Systems Green"
+            />
+          </>
+        )}
       </div>
 
       {/* Detailed Insights Row */}
+      {loading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <InsightCardSkeleton />
+          <InsightCardSkeleton />
+          <div className="bg-[#3E291D] rounded-[24px] p-6 space-y-4">
+            <Shimmer className="h-2.5 w-32 rounded bg-white/10" />
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="p-3 bg-white/5 rounded-xl space-y-2">
+                  <Shimmer className="h-2 w-16 rounded bg-white/10" />
+                  <Shimmer className="h-3 w-20 rounded bg-white/10" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Fuel Demand */}
         <div className="bg-white rounded-[24px] p-6 border border-slate-200 shadow-sm">
@@ -132,6 +159,7 @@ const Overview = () => {
           </div>
         </div>
       </div>
+      )}
     </motion.div>
   );
 };

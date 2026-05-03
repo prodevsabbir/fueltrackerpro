@@ -29,12 +29,13 @@ export const stationService = {
   },
 
   // 📝 REVIEW & FEEDBACK INTELLIGENCE
-  createReview: async (stationId, rating, comment, isOverprice = false) => {
+  createReview: async (stationId, rating, comment, isOverprice = false, reportedIssues = []) => {
     const response = await api.post('/review/create', { 
       stationId, 
       rating, 
       comment, 
-      isOverprice 
+      isOverprice,
+      reportedIssues
     });
     return response.data;
   },
@@ -46,6 +47,11 @@ export const stationService = {
   
   getAllReviews: async (params = {}) => {
     const response = await api.get('/review/all', { params });
+    return response.data;
+  },
+
+  voteReview: async (reviewId, type) => {
+    const response = await api.post(`/review/${reviewId}/vote`, { type });
     return response.data;
   }
 };

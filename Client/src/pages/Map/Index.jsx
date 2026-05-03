@@ -117,20 +117,25 @@ const createMarkerIcon = (status, isUnverified = false, type = 'fuel', isMobile 
   });
 };
 
-const createUserIcon = (isMobile = false) => {
+const createUserIcon = (isMobile = false, isPinned = false) => {
   const size = isMobile ? 30 : 40;
   const svgSize = isMobile ? 18 : 24;
+  const color = isPinned ? '#f59e0b' : '#3b82f6';
+  const pingColor = isPinned ? 'bg-amber-500' : 'bg-blue-500';
+  const borderColor = isPinned ? 'border-amber-500' : 'border-blue-500';
+
   return new L.DivIcon({
     className: '',
     html: `
       <div class="relative">
-        <div class="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-25 scale-150"></div>
-        <div class="relative w-${isMobile ? '8' : '10'} h-${isMobile ? '8' : '10'} bg-white rounded-full shadow-2xl flex items-center justify-center border-2 border-blue-500">
-          <svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <div class="absolute inset-0 ${pingColor} rounded-full animate-ping opacity-25 scale-150"></div>
+        <div class="relative w-${isMobile ? '8' : '10'} h-${isMobile ? '8' : '10'} bg-white rounded-full shadow-2xl flex items-center justify-center border-2 ${borderColor}">
+          <svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.9A2 2 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
           </svg>
         </div>
-        <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-500 rounded-full border border-white"></div>
+        ${isPinned ? '<div class="absolute -top-2 -right-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg animate-bounce"><span class="text-[8px] font-black text-white">PIN</span></div>' : ''}
+        <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 ${pingColor} rounded-full border border-white"></div>
       </div>
     `,
     iconSize: [size, size],
@@ -218,6 +223,8 @@ const MapPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [selfPinExpiry, setSelfPinExpiry] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const lastFetchTime = useRef(0);
   const initialFetchDone = useRef(false);
@@ -402,16 +409,16 @@ const MapPage = () => {
   const emitLocation = useCallback((socket) => {
     const pos = userPosRef.current;
     if (!pos || !user?._id) return;
-    // Admin location is NEVER broadcast — admin tracks riders, not the other way
     if (user?.role === 'admin') return;
     socket.emit('update_location', {
       userId: user._id,
       name: user?.name || user?.email?.split('@')[0] || 'Rider',
       role: user.role || 'rider',
       lat: pos[0],
-      lng: pos[1]
+      lng: pos[1],
+      isPinned: !!selfPinExpiry
     });
-  }, [user?._id, user?.name, user?.email, user?.role]);
+  }, [user?._id, user?.name, user?.email, user?.role, selfPinExpiry]);
 
   useEffect(() => {
     if (!user?._id) return;
@@ -432,7 +439,7 @@ const MapPage = () => {
 
     socket.on('user_location_changed', (data) => {
       if (data.userId && data.userId !== user._id && Number.isFinite(data.lat)) {
-        setRiders(prev => ({ ...prev, [data.userId]: { lat: data.lat, lng: data.lng, name: data.name } }));
+        setRiders(prev => ({ ...prev, [data.userId]: { ...data } }));
       }
     });
 
@@ -453,7 +460,8 @@ const MapPage = () => {
         name: user?.name || user?.email?.split('@')[0] || 'Rider',
         role: user?.role || 'rider',
         lat: userPos[0],
-        lng: userPos[1]
+        lng: userPos[1],
+        isPinned: !!selfPinExpiry
       });
     }
   }, [userPos, user?._id, user?.name, user?.email, user?.role]);
@@ -556,20 +564,26 @@ const MapPage = () => {
         <MapContainer center={[23.8103, 90.4125]} zoom={13} className="h-full w-full absolute inset-0" zoomControl={false} style={{ height: '100%', width: '100%', position: 'absolute' }}>
           <TileLayer url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}" subdomains={['mt0', 'mt1', 'mt2', 'mt3']} attribution='&copy; Google Maps' />
           <MapController userPos={userPos} onMapMove={(lat, lng) => refreshMapData(lat, lng)} />
-          {userPos && <Circle center={userPos} radius={radius * 1000} pathOptions={{ fillColor: '#3b82f6', fillOpacity: 0.1, color: '#3b82f6', weight: 2, dashArray: '8, 8' }} />}
-          {userPos && <Marker position={userPos} icon={createUserIcon(isMobile)} />}
+          {userPos && <Circle center={userPos} radius={radius * 1000} pathOptions={{ fillColor: selfPinExpiry ? '#f59e0b' : '#3b82f6', fillOpacity: 0.1, color: selfPinExpiry ? '#f59e0b' : '#3b82f6', weight: 2, dashArray: '8, 8' }} />}
+          {userPos && <Marker position={userPos} icon={createUserIcon(isMobile, !!selfPinExpiry)} />}
           
-          {/* OTHER RIDERS ON MAP - ADMIN ONLY VIEW */}
-          {user?.role === 'admin' && Object.values(riders).map((rider, idx) => (
-             <Marker key={idx} position={[rider.lat, rider.lng]} icon={createUserIcon(isMobile)}>
-                <Popup className="premium-popup">
-                   <div className="p-2 text-center">
-                      <p className="text-[10px] font-black uppercase text-slate-900">{rider.name}</p>
-                      <p className="text-[8px] font-bold text-blue-500 uppercase">Live Rider</p>
-                   </div>
-                </Popup>
-             </Marker>
-          ))}
+          {/* ALL RIDERS - SHOW ADMINS EVERYTHING, RIDERS ONLY PINNED */}
+          {Object.values(riders).map((rider, idx) => {
+             const canSee = user?.role === 'admin' || rider.isPinned;
+             if (!canSee) return null;
+             return (
+               <Marker key={idx} position={[rider.lat, rider.lng]} icon={createUserIcon(isMobile, rider.isPinned)}>
+                  <Popup className="premium-popup">
+                     <div className="p-2 text-center">
+                        <p className="text-[10px] font-black uppercase text-slate-900">{rider.name}</p>
+                        <p className={`text-[8px] font-bold uppercase ${rider.isPinned ? 'text-amber-500' : 'text-blue-500'}`}>
+                          {rider.isPinned ? 'Network Broadcast' : 'Live Rider'}
+                        </p>
+                     </div>
+                  </Popup>
+               </Marker>
+             );
+          })}
           
           {/* VERIFIED STATIONS WITH HOVER INTEL - NOW INTERACTIVE */}
           {finalVerified.map(station => (
@@ -717,9 +731,48 @@ const MapPage = () => {
                     </div>
                     <input type="range" min="1" max="50" value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="w-full h-1 md:h-1.5 accent-amber-500 bg-slate-100 rounded-full appearance-none cursor-pointer" />
                  </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
+                  {/* Self-Pin Tactical Control */}
+                  {user?.role !== 'admin' && (
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        if (selfPinExpiry) {
+                          setSelfPinExpiry(null);
+                          toast.info("Network broadcast terminated.");
+                        } else {
+                          const expiry = Date.now() + 8 * 60 * 1000;
+                          setSelfPinExpiry(expiry);
+                          toast.success("Broadcasting your position for 8 minutes!");
+                        }
+                      }}
+                      className={`w-full rounded-2xl md:rounded-[2rem] p-4 md:p-5 shadow-2xl border-2 flex items-center justify-between transition-all ${
+                        selfPinExpiry 
+                        ? 'bg-amber-500 border-amber-600 text-white animate-pulse' 
+                        : 'bg-white border-slate-100 text-slate-900 hover:border-amber-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Users size={20} className={selfPinExpiry ? 'text-white' : 'text-amber-500'} />
+                        <div>
+                          <p className="font-black text-[10px] md:text-sm tracking-tight leading-tight">
+                            {selfPinExpiry ? 'Self Pin Active' : 'Self Pin'}
+                          </p>
+                          <p className={`text-[7px] md:text-[9px] font-bold uppercase tracking-widest ${selfPinExpiry ? 'text-white/80' : 'text-slate-400'}`}>
+                            {selfPinExpiry ? 'Visible to Network' : 'Go Live on Map'}
+                          </p>
+                        </div>
+                      </div>
+                      {selfPinExpiry && (
+                        <div className="bg-white/20 px-3 py-1 rounded-full font-black text-xs">
+                          {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                        </div>
+                      )}
+                    </motion.button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
         </div>
 
       </div>

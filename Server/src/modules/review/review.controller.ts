@@ -21,3 +21,11 @@ export const getAllReviews = asyncHandler(async (req: Request, res: Response) =>
   const { reviews, meta } = await reviewService.getAllReviews(req.query);
   ApiResponse.sendSuccess(res, 200, "All reviews retrieved", reviews, meta);
 });
+
+export const voteReview = asyncHandler(async (req: Request, res: Response) => {
+  const { reviewId } = req.params;
+  const { type } = req.body;
+  const userId = (req as any).user?._id;
+  const review = await reviewService.voteReview(reviewId, userId, type);
+  ApiResponse.sendSuccess(res, 200, "Vote updated", review);
+});
