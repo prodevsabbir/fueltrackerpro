@@ -5,6 +5,7 @@ import { useLanguage } from '../../../context/LanguageContext';
 import { stationService } from '../../../helpers/stationService';
 import { authService } from '../../../helpers/authService';
 import { toast } from 'react-toastify';
+import { formatTimeAgo } from '../../../helpers/dateUtils';
 
 const StationDetails = ({ station, onBack }) => {
   const { t } = useLanguage();
@@ -97,13 +98,6 @@ const StationDetails = ({ station, onBack }) => {
     }
   };
 
-  const formatTime = (isoString) => {
-    if (!isoString) return "Just now";
-    const diff = Math.floor((new Date() - new Date(isoString)) / (1000 * 60));
-    if (diff < 1) return "Just now";
-    if (diff < 60) return `${diff}m ago`;
-    return `${Math.floor(diff / 60)}h ago`;
-  };
 
   const handleVote = async (reviewId, type) => {
     try {
@@ -144,18 +138,18 @@ const StationDetails = ({ station, onBack }) => {
       <div className="p-4 md:p-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
         <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-amber-600 font-bold text-xs md:text-sm transition-all">
           <ArrowLeft size={18} />
-          <span className="hidden sm:inline">Back to Stations</span>
-          <span className="sm:hidden">Back</span>
+          <span className="hidden sm:inline">{t.pumps.back}</span>
+          <span className="sm:hidden">{t.pumps.prev}</span>
         </button>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-100 shadow-sm">
              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-             <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{getAggregateTrust()}% Community Trust</span>
+             <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{getAggregateTrust()}% {t.pumps.trustScore}</span>
           </div>
           <div className={`status-pill px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
             station.status === 'available' ? 'pill-available' : station.status === 'limited' ? 'pill-limited' : 'pill-out'
           }`}>
-            {station.status}
+            {station.status === 'available' ? t.pumps.available.toUpperCase() : station.status === 'limited' ? t.pumps.limited.toUpperCase() : t.pumps.out.toUpperCase()}
           </div>
         </div>
       </div>
@@ -183,7 +177,7 @@ const StationDetails = ({ station, onBack }) => {
             className="w-full md:w-auto bg-slate-900 text-white px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/10"
           >
             <Navigation size={18} className="text-amber-500" />
-            View on Map
+            {t.pumps.viewMap}
           </button>
         </div>
 
@@ -191,7 +185,7 @@ const StationDetails = ({ station, onBack }) => {
         <div className="mb-12">
           <h3 className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2 border-b border-slate-50 pb-4">
             <CheckCircle2 size={18} className="text-emerald-500" />
-            CATEGORIES & PRICING
+            {t.pumps.categories.toUpperCase()} & {t.pumps.pricing.toUpperCase()}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
              {station.fuels.map(fuel => (
@@ -212,13 +206,13 @@ const StationDetails = ({ station, onBack }) => {
                   <div className="flex flex-col">
                      <div className="flex items-baseline gap-1">
                         <span className="text-2xl font-black text-slate-900 tracking-tighter">৳ {fuel.price}</span>
-                        <span className="text-[10px] font-bold text-slate-400">/Ltr</span>
+                        <span className="text-[10px] font-bold text-slate-400">{t.pumps.unit}</span>
                      </div>
                      <span className={`text-[9px] font-black uppercase mt-2 px-2 py-1 rounded-lg w-fit ${
                        fuel.status === 'available' ? 'bg-emerald-50 text-emerald-600' : 
                        fuel.status === 'limited' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-400'
                      }`}>
-                        {fuel.status}
+                        {fuel.status === 'available' ? t.pumps.available.toUpperCase() : fuel.status === 'limited' ? t.pumps.limited.toUpperCase() : t.pumps.out.toUpperCase()}
                      </span>
                   </div>
                </div>
@@ -226,13 +220,13 @@ const StationDetails = ({ station, onBack }) => {
           </div>
         </div>
 
-        {/* Rider Feedback Section - PREMUM ADAPTIVE */}
+        {/* Rider Feedback Section */}
         <div className="border-t border-slate-100 pt-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div className="flex flex-col gap-2">
               <h3 className="text-lg md:text-2xl font-black text-slate-900 flex items-center gap-2">
                 <Star size={28} className="text-amber-500" fill="currentColor" />
-                Rider Feedback
+                {t.pumps.feedback}
               </h3>
               {reviews.length > 0 && (() => {
                 const avg = (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1);
@@ -246,7 +240,7 @@ const StationDetails = ({ station, onBack }) => {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-black text-amber-500">{avg}</span>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-l border-slate-200 pl-2">
-                        {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+                        {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
                       </span>
                     </div>
                   </div>
@@ -254,14 +248,13 @@ const StationDetails = ({ station, onBack }) => {
               })()}
             </div>
             
-            {/* Overprice Tactical Toggle */}
             <div className="flex flex-wrap md:justify-end gap-2 max-w-full md:max-w-[60%]">
               {[
-                { id: 'Overpricing', label: 'Overprice', icon: <XCircle size={14} /> },
-                { id: 'Long Queue', label: 'Long Queue', icon: <Navigation size={14} /> },
-                { id: 'Bad Behavior', label: 'Bad Behavior', icon: <User size={14} /> },
-                { id: 'Short Measure', label: 'Short Measure', icon: <Fuel size={14} /> },
-                { id: 'Fuel Out', label: 'Fuel Out', icon: <XCircle size={14} /> },
+                { id: 'Overpricing', label: t.reports.overprice, icon: <XCircle size={14} /> },
+                { id: 'Long Queue', label: t.reports.queue, icon: <Navigation size={14} /> },
+                { id: 'Bad Behavior', label: t.reports.behavior, icon: <User size={14} /> },
+                { id: 'Short Measure', label: t.reports.measure, icon: <Fuel size={14} /> },
+                { id: 'Fuel Out', label: t.reports.out, icon: <XCircle size={14} /> },
               ].map(issue => (
                 <button 
                   key={issue.id}
@@ -285,7 +278,6 @@ const StationDetails = ({ station, onBack }) => {
           </div>
 
           <div className="bg-white p-6 md:p-8 rounded-[32px] border border-slate-100 mb-10 shadow-2xl shadow-slate-100/50 flex flex-col gap-4 focus-within:ring-4 ring-amber-500/5 transition-all">
-             {/* Star Rating Picker */}
              <div className="flex flex-col gap-2">
                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Your Rating</span>
                <div className="flex items-center gap-1.5">
@@ -322,7 +314,7 @@ const StationDetails = ({ station, onBack }) => {
              <textarea 
                value={comment} 
                onChange={(e) => setComment(e.target.value)} 
-               placeholder="Share your experience at this station..." 
+               placeholder={t.pumps.placeholder} 
                className="w-full bg-transparent border-none focus:ring-0 outline-none text-sm md:text-base font-medium text-slate-700 resize-none h-24 md:h-32" 
              />
              <div className="flex justify-between items-center pt-3 border-t border-slate-50">
@@ -335,12 +327,11 @@ const StationDetails = ({ station, onBack }) => {
                   className="bg-[#1e293b] text-white px-8 md:px-10 py-3.5 md:py-4 rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all active:scale-95 shadow-xl shadow-slate-900/20 disabled:opacity-50"
                 >
                   {posting ? <Loader2 size={16} className="animate-spin" /> : <Send size={18} className="text-amber-500" />}
-                  Post Feedback
+                  {t.pumps.post}
                 </button>
              </div>
           </div>
           
-          {/* Feedback Stream */}
           <div className="space-y-6">
             {loadingReviews ? (
               <div className="flex justify-center py-20">
@@ -374,7 +365,7 @@ const StationDetails = ({ station, onBack }) => {
                                    <Star key={s} size={10} className={s <= (c.rating || 0) ? 'text-amber-400' : 'text-slate-200'} fill={s <= (c.rating || 0) ? 'currentColor' : 'none'} />
                                  ))}
                               </div>
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none border-l border-slate-100 pl-2">{formatTime(c.createdAt)}</span>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none border-l border-slate-100 pl-2">{formatTimeAgo(c.createdAt, t)}</span>
                            </div>
                         </div>
                       </div>
@@ -392,7 +383,6 @@ const StationDetails = ({ station, onBack }) => {
                       "{c.comment}"
                     </p>
 
-                    {/* INTERACTIVE TRUST BAR */}
                     <div className="flex items-center justify-between pt-4 border-t border-slate-50/50">
                        <div className="flex items-center gap-4">
                           <button 
@@ -424,7 +414,7 @@ const StationDetails = ({ station, onBack }) => {
               })
             ) : (
               <div className="py-20 flex flex-col items-center justify-center opacity-40">
-                <p className="text-sm md:text-base font-black uppercase tracking-[0.4em] text-slate-400 text-center">NO FEEDBACK YET. BE THE FIRST!</p>
+                <p className="text-sm md:text-base font-black uppercase tracking-[0.4em] text-slate-400 text-center">{t.pumps.noFeedback.toUpperCase()}</p>
               </div>
             )}
           </div>

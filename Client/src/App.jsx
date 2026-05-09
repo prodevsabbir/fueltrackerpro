@@ -18,6 +18,8 @@ import MapPage from './pages/Map/Index';
 const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
 import ProtectedRoute from './components/shared/ProtectedRoute';
 import LocationTracker from './components/shared/LocationTracker';
+import Helpline from './components/shared/Helpline';
+import NotificationListener from './components/shared/NotificationListener';
 
 // Loading Fallback Component
 const PageLoader = () => (
@@ -40,6 +42,8 @@ function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-amber-500/30 selection:text-amber-700 flex flex-col items-center">
       <LocationTracker />
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+      <Helpline />
+      <NotificationListener />
 
       {/* Only render the global Navbar on non-standalone pages */}
       {!isStandalone && <Navbar />}

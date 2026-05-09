@@ -6,6 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { stationService } from '../../helpers/stationService';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import { formatTimeAgo } from '../../helpers/dateUtils';
 
 // Haversine distance calculator
 const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -65,10 +66,10 @@ const Stations = () => {
 
   const categories = useMemo(() => [
     { id: 'all', name: 'ALL' },
-    { id: 'octane', name: 'OCTANE' },
-    { id: 'petrol', name: 'PETROL' },
-    { id: 'diesel', name: 'DIESEL' }
-  ], []);
+    { id: 'octane', name: t.pumps.octane.toUpperCase() },
+    { id: 'petrol', name: t.pumps.petrol.toUpperCase() },
+    { id: 'diesel', name: t.pumps.diesel.toUpperCase() }
+  ], [t]);
 
   const location = useLocation();
 
@@ -91,9 +92,7 @@ const Stations = () => {
             setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
           },
           (error) => {
-            // Realtime failed -> Fallback to DB
             if (user?.location?.coordinates) {
-              // DB stores [lng, lat]
               setUserLocation({ lat: user.location.coordinates[1], lng: user.location.coordinates[0] });
             } else if (!locationErrorShown) {
               toast.warning("Please turn on location to find nearby stations accurately.", { autoClose: 5000 });
@@ -102,7 +101,6 @@ const Stations = () => {
           }
         );
       } else {
-        // Fallback to DB
         if (user?.location?.coordinates) {
           setUserLocation({ lat: user.location.coordinates[1], lng: user.location.coordinates[0] });
         } else if (!locationErrorShown) {
@@ -112,7 +110,6 @@ const Stations = () => {
       }
     };
     
-    // Only attempt to get location if we don't have it
     if (!userLocation) {
       locateUser();
     }
@@ -130,7 +127,6 @@ const Stations = () => {
         sortBy
       };
 
-      // Add coordinates if available
       if (userLocation?.lat && userLocation?.lng) {
         params.lat = userLocation.lat;
         params.lng = userLocation.lng;
@@ -138,14 +134,13 @@ const Stations = () => {
       
       const response = await stationService.getAllStations(params);
       
-      // 🛡️ ADAPTIVE PARSING & CAPPING (Max 50 stations / 5 pages)
       if (Array.isArray(response)) {
         setStations(response);
         setTotalPages(1);
       } else if (response && response.stations) {
         setStations(response.stations);
         if (response.meta) {
-          const maxAllowedPages = 5; // 5 pages * 10 items = 50 max
+          const maxAllowedPages = 5; 
           setTotalPages(Math.min(response.meta.totalPages || 1, maxAllowedPages));
         }
       } else {
@@ -155,7 +150,7 @@ const Stations = () => {
     } catch (error) {
       toast.error("Network Error: Discovery offline");
     } finally {
-      setTimeout(() => setLoading(false), 800); // Smooth transition
+      setTimeout(() => setLoading(false), 800);
     }
   };
 
@@ -163,13 +158,6 @@ const Stations = () => {
     fetchStations();
   }, [currentPage, searchQuery, activeStatus, activeCategory, sortBy, userLocation]);
 
-  const formatTime = (isoString) => {
-    if (!isoString) return "Just now";
-    const diff = Math.floor((new Date() - new Date(isoString)) / (1000 * 60));
-    if (diff < 1) return "Just now";
-    if (diff < 60) return `${diff}m ago`;
-    return `${Math.floor(diff / 60)}h ago`;
-  };
 
   useEffect(() => { window.scrollTo(0, 0); }, [currentPage]);
 
@@ -177,15 +165,14 @@ const Stations = () => {
     <div className="w-full flex flex-col items-center bg-[#FAFAFB] min-h-screen pt-24 md:pt-32 pb-20 overflow-x-hidden">
       <div className="w-full max-w-7xl px-4 md:px-8">
         
-        {/* PREMIUM TACTICAL HEADER (Matching User Image) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="w-10 h-10 md:w-12 md:h-12 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-400 flex items-center justify-center shadow-sm">
               <ArrowLeft size={18} />
             </button>
             <div>
-               <h1 className="text-xl md:text-2xl font-black text-[#1e293b] tracking-tight leading-none">Nearby Stations</h1>
-               <p className="text-[#94a3b8] font-black text-[8px] md:text-[10px] uppercase tracking-[0.2em] mt-1.5">COMMUNITY INTELLIGENCE</p>
+               <h1 className="text-xl md:text-2xl font-black text-[#1e293b] tracking-tight leading-none">{t.pumps.title}</h1>
+               <p className="text-[#94a3b8] font-black text-[8px] md:text-[10px] uppercase tracking-[0.2em] mt-1.5">{t.pumps.subtitle}</p>
             </div>
           </div>
           
@@ -195,7 +182,7 @@ const Stations = () => {
             </div>
             <input 
               type="text" 
-              placeholder="Search stations..."
+              placeholder={t.pumps.search}
               value={searchQuery}
               onChange={(e) => {setSearchQuery(e.target.value); setCurrentPage(1);}}
               className="w-full bg-white border border-slate-200 rounded-2xl md:rounded-3xl py-3 md:py-3.5 pl-12 pr-4 text-xs font-bold text-slate-700 outline-none focus:ring-4 focus:ring-amber-500/10 transition-all shadow-sm"
@@ -203,9 +190,7 @@ const Stations = () => {
           </div>
         </div>
 
-        {/* INTELLIGENCE FILTER ROW (Matching User Image) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-6 border-b border-slate-100">
-           {/* Fuel Tabs */}
            <div className="flex p-1 bg-slate-100/80 backdrop-blur-sm rounded-2xl overflow-x-auto scrollbar-hide">
               {categories.map(cat => (
                 <button 
@@ -223,31 +208,28 @@ const Stations = () => {
            </div>
 
            <div className="flex items-center gap-3">
-              {/* Status Dropdown */}
               <div className="flex-1 md:flex-none flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm group hover:border-amber-500 transition-all">
                 <Filter size={14} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
                 <select value={activeStatus} onChange={(e) => {setActiveStatus(e.target.value); setCurrentPage(1);}} className="bg-transparent border-none text-[9px] font-black text-slate-600 outline-none cursor-pointer uppercase tracking-widest w-full">
-                    <option value="all">ALL STATUS:</option>
-                    <option value="available">AVAILABLE</option>
-                    <option value="limited">LIMITED</option>
-                    <option value="out">CLOSED</option>
+                    <option value="all">{t.pumps.filter}:</option>
+                    <option value="available">{t.pumps.available.toUpperCase()}</option>
+                    <option value="limited">{t.pumps.limited.toUpperCase()}</option>
+                    <option value="out">{t.pumps.out.toUpperCase()}</option>
                 </select>
               </div>
 
-              {/* Sort Dropdown */}
               <div className="flex-1 md:flex-none flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm group hover:border-amber-500 transition-all">
                 <SlidersHorizontal size={14} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
                 <select value={sortBy} onChange={(e) => {setSortBy(e.target.value); setCurrentPage(1);}} className="bg-transparent border-none text-[9px] font-black text-slate-600 outline-none cursor-pointer uppercase tracking-widest w-full">
-                    <option value="distance">NEAREST FIRST</option>
-                    <option value="rating">TOP RATED</option>
-                    <option value="price-low">PRICE: LOW</option>
-                    <option value="price-high">PRICE: HIGH</option>
+                    <option value="distance">{t.pumps.nearest}</option>
+                    <option value="rating">{t.pumps.rating.toUpperCase()}</option>
+                    <option value="price-low">{t.pumps.priceLow.toUpperCase()}</option>
+                    <option value="price-high">{t.pumps.priceHigh.toUpperCase()}</option>
                 </select>
               </div>
            </div>
         </div>
 
-        {/* STATIONS GRID - COMPACT & RESPONSIVE */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 mb-12">
           {loading ? (
             Array.from({ length: 12 }).map((_, i) => <StationSkeleton key={i} />)
@@ -279,7 +261,7 @@ const Stations = () => {
                         pump.status === 'limited' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 
                         'bg-red-50 text-red-600 border border-red-100'
                       }`}>
-                        {pump.status}
+                        {pump.status === 'available' ? t.pumps.available.toUpperCase() : pump.status === 'limited' ? t.pumps.limited.toUpperCase() : t.pumps.out.toUpperCase()}
                       </div>
                     </div>
 
@@ -325,7 +307,7 @@ const Stations = () => {
                            </div>
                         </div>
                         <p className="text-[8px] font-bold text-slate-400 flex items-center justify-end gap-1 uppercase tracking-wider">
-                          <Clock size={8} /> {formatTime(pump.updatedAt)}
+                          <Clock size={8} /> {formatTimeAgo(pump.updatedAt, t)}
                         </p>
                       </div>
                     </div>
@@ -342,7 +324,6 @@ const Stations = () => {
           )}
         </div>
 
-        {/* PAGINATION SECTION - COMPACT */}
         {!loading && totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 md:gap-3">
              <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl border border-slate-200 flex items-center justify-center transition-all hover:border-amber-500 hover:text-amber-500 disabled:opacity-30 shadow-sm"><ChevronLeft size={18} /></button>

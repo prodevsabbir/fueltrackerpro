@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   User, Mail, Phone, Shield, History, Bookmark, 
   LogOut, Camera, Star, Fuel, AlertCircle, 
-  CheckCircle2, Loader2, Save, Key, MapPin
+  CheckCircle2, Loader2, Save, Key, MapPin, HelpCircle
 } from 'lucide-react';
+import { helplineService } from '../../helpers/helplineService';
+import { maskEmail, maskPhone } from '../../helpers/privacyUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/axios';
@@ -16,6 +18,8 @@ const UserSettings = () => {
   const { user, logout, updateUser, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
+  const [userRequests, setUserRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
   
   // Profile Form State
   const [formData, setFormData] = useState({
@@ -116,12 +120,33 @@ const UserSettings = () => {
     navigate('/login');
   };
 
+  const fetchUserRequests = async () => {
+    setLoadingRequests(true);
+    try {
+      const response = await helplineService.getMyRequests();
+      if (response.status === 'ok') {
+        setUserRequests(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch requests', error);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'helpline') {
+      fetchUserRequests();
+    }
+  }, [activeTab]);
+
   if (authLoading) return null;
 
   const menuItems = [
     { id: 'profile', icon: User, label: 'Profile Settings', sub: 'Identity & Info' },
     { id: 'activity', icon: History, label: 'My Activity', sub: 'Reports & Intel' },
     { id: 'saved', icon: Bookmark, label: 'Saved Stations', sub: 'Quick Access' },
+    { id: 'helpline', icon: HelpCircle, label: t.helpline.support, sub: 'Support & Help' },
     { id: 'security', icon: Shield, label: 'Security', sub: 'Password & Auth' },
   ];
 
@@ -229,7 +254,7 @@ const UserSettings = () => {
                                <input 
                                  type="email" 
                                  disabled
-                                 value={formData.email}
+                                 value={maskEmail(formData.email)}
                                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-14 pr-6 outline-none font-bold text-slate-400 text-sm cursor-not-allowed" 
                                />
                             </div>
@@ -349,6 +374,50 @@ const UserSettings = () => {
                    <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Bookmark stations for quick tracking</p>
                 </div>
               )}
+
+              {activeTab === 'helpline' && (
+               <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="mb-10 flex justify-between items-end">
+                     <div>
+                       <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t.helpline.myRequests}</h2>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t.helpline.track}</p>
+                     </div>
+                     <HelpCircle className="text-amber-500" size={32} />
+                  </div>
+
+                  <div className="space-y-4">
+                    {loadingRequests ? (
+                      <div className="py-20 flex justify-center"><Loader2 size={32} className="animate-spin text-amber-500" /></div>
+                    ) : userRequests.length > 0 ? (
+                      userRequests.map(req => (
+                        <div key={req._id} className="bg-slate-50 border border-slate-100 rounded-[32px] p-6 shadow-sm">
+                           <div className="flex justify-between items-start mb-4">
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${req.status === 'resolved' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{req.status}</span>
+                              </div>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{new Date(req.createdAt).toLocaleDateString()}</span>
+                           </div>
+                           <p className="text-xs font-black text-slate-900 uppercase tracking-widest mb-1">{req.subject}</p>
+                           <p className="text-sm font-bold text-slate-600 mb-4 italic">"{req.message}"</p>
+                           
+                           {req.adminReply && (
+                             <div className="bg-white border border-emerald-100 rounded-2xl p-4 shadow-sm">
+                                <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">{t.helpline.officialResponse}</p>
+                                <p className="text-xs font-bold text-slate-700">"{req.adminReply}"</p>
+                             </div>
+                           )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-20">
+                         <HelpCircle size={48} className="text-slate-100 mx-auto mb-4" />
+                         <p className="text-xs font-black uppercase tracking-[0.4em] text-slate-400">{t.helpline.noRequests}</p>
+                      </div>
+                    )}
+                  </div>
+               </div>
+             )}
            </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { AlertCircle, ThumbsUp, ThumbsDown, User, ShieldCheck, MessageSquare, Lo
 import { useLanguage } from '../../../context/LanguageContext';
 import { stationService } from '../../../helpers/stationService';
 import { toast } from 'react-toastify';
+import { formatTimeAgo } from '../../../helpers/dateUtils';
 
 const UserReports = () => {
   const { t } = useLanguage();
@@ -30,13 +31,6 @@ const UserReports = () => {
     fetchReports();
   }, []);
 
-  const formatTime = (isoString) => {
-    if (!isoString) return "Just now";
-    const diff = Math.floor((new Date() - new Date(isoString)) / (1000 * 60));
-    if (diff < 1) return "Just now";
-    if (diff < 60) return `${diff}m ago`;
-    return `${Math.floor(diff / 60)}h ago`;
-  };
 
   const handleVote = async (reviewId, type) => {
     try {
@@ -107,7 +101,7 @@ const UserReports = () => {
                          {report.isVerified && <ShieldCheck size={12} className="text-emerald-500" />}
                       </div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase">
-                        {formatTime(report.createdAt)}
+                        {formatTimeAgo(report.createdAt, t)}
                       </span>
                     </div>
                   </div>

@@ -18,12 +18,15 @@ import ManageReviews from './components/ManageReviews';
 import Analytics from './components/Analytics';
 import Notifications from './components/Notifications';
 import SettingsComponent from './components/Settings';
+import ManageHelpline from './components/ManageHelpline';
+import { HelpCircle } from 'lucide-react';
 
 const NAV_ITEMS = [
   { key: 'overview',      icon: LayoutDashboard,     label: 'Overview',       group: 'main' },
   { key: 'stations',      icon: BsFillFuelPumpFill,   label: 'Stations',       group: 'main' },
   { key: 'users',         icon: Users,                label: 'Users',          group: 'main' },
   { key: 'reviews',       icon: MessageSquare,        label: 'Reviews',        group: 'main' },
+  { key: 'helpline',      icon: HelpCircle,           label: 'Helpline',       group: 'main' },
   { key: 'analytics',     icon: BarChart2,            label: 'Analytics',      group: 'system' },
   { key: 'notifications', icon: Bell,                 label: 'Notifications',  group: 'system' },
   { key: 'settings',      icon: Settings,             label: 'Settings',       group: 'system' },
@@ -57,6 +60,7 @@ const AdminDashboard = () => {
       case 'analytics':      return <Analytics key="analytics" />;
       case 'notifications':  return <Notifications key="notifications" />;
       case 'settings':       return <SettingsComponent key="settings" />;
+      case 'helpline':       return <ManageHelpline key="helpline" />;
       default: return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           className="h-full flex items-center justify-center">

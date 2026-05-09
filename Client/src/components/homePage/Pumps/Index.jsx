@@ -5,6 +5,7 @@ import { Fuel, MapPin, Clock, Verified, Star, ChevronRight, Navigation } from 'l
 import { useLanguage } from '../../../context/LanguageContext';
 import { StationCardSkeleton } from '../../shared/Skeleton';
 import { stationService } from '../../../helpers/stationService';
+import { formatTimeAgo } from '../../../helpers/dateUtils';
 
 // Haversine distance calculator
 const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -32,10 +33,10 @@ const PumpList = () => {
 
   const categories = useMemo(() => [
     { id: 'all', name: 'ALL' },
-    { id: 'octane', name: 'OCTANE' },
-    { id: 'petrol', name: 'PETROL' },
-    { id: 'diesel', name: 'DIESEL' }
-  ], []);
+    { id: 'octane', name: t.pumps.octane.toUpperCase() },
+    { id: 'petrol', name: t.pumps.petrol.toUpperCase() },
+    { id: 'diesel', name: t.pumps.diesel.toUpperCase() }
+  ], [t]);
 
   // 🛰️ GEOLOCATION INTELLIGENCE: Capture user's live position
   useEffect(() => {
@@ -62,12 +63,9 @@ const PumpList = () => {
         lng: coords?.lng
       };
       
-      // 📡 LIVE DATA FETCH (Now proximity-aware)
       let response;
       if (coords?.lat && coords?.lng) {
-        // High-precision distance sorting
         response = await stationService.getNearbyStations(coords.lat, coords.lng, 10);
-        // Limit to 5 for home page
         if (Array.isArray(response)) {
           response = response.slice(0, 5);
         }
@@ -95,23 +93,16 @@ const PumpList = () => {
     fetchNearby();
   }, [activeCategory, coords]);
 
-  const formatTime = (isoString) => {
-    if (!isoString) return "Just now";
-    const diff = Math.floor((new Date() - new Date(isoString)) / (1000 * 60));
-    if (diff < 1) return "Just now";
-    if (diff < 60) return `${diff}m ago`;
-    return `${Math.floor(diff / 60)}h ago`;
-  };
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between px-2 mb-8">
         <div>
           <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">{t.pumps.title}</h2>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Top 5 Trusted Nearby</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t.pumps.subtitle}</p>
         </div>
         <button onClick={() => navigate('/map')} className="text-amber-600 font-black text-[10px] md:text-xs uppercase tracking-widest hover:underline flex items-center gap-1.5 group transition-all">
-          VIEW MAP <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+          {t.pumps.viewMap} <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
 
@@ -149,7 +140,6 @@ const PumpList = () => {
                     onClick={() => navigate(`/stations/${pump?._id}`)}
                     className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all group cursor-pointer relative overflow-hidden"
                   >
-                    {/* Status Indicator */}
                     <div className={`absolute top-0 left-0 w-1 md:w-1.5 h-full ${
                       pump?.status === 'available' ? 'bg-emerald-500' : pump?.status === 'limited' ? 'bg-amber-500' : 'bg-red-500'
                     }`}></div>
@@ -174,7 +164,7 @@ const PumpList = () => {
                         pump?.status === 'limited' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 
                         'bg-red-50 text-red-600 border border-red-100'
                       }`}>
-                        {pump?.status || 'Unknown'}
+                        {pump?.status === 'available' ? t.pumps.available.toUpperCase() : pump?.status === 'limited' ? t.pumps.limited.toUpperCase() : t.pumps.out.toUpperCase()}
                       </div>
                     </div>
 
@@ -211,15 +201,9 @@ const PumpList = () => {
                            </div>
                          </div>
                          <p className="text-[8px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-wider">
-                           <Clock size={8} className="text-slate-300" /> {formatTime(pump?.updatedAt)}
+                           <Clock size={8} className="text-slate-300" /> {formatTimeAgo(pump?.updatedAt, t)}
                          </p>
                       </div>
-                    </div>
-
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
-                       <div className="bg-slate-900 text-white p-2.5 rounded-xl shadow-xl">
-                          <Navigation size={16} className="text-amber-500" />
-                       </div>
                     </div>
                   </motion.div>
                 );
@@ -237,7 +221,7 @@ const PumpList = () => {
         onClick={() => navigate('/stations')} 
         className="w-full py-5 mt-8 rounded-[32px] bg-slate-50 border-2 border-dashed border-slate-200 text-slate-400 font-black text-xs uppercase tracking-[0.4em] hover:text-amber-600 hover:border-amber-200 hover:bg-white transition-all shadow-inner active:scale-[0.98]"
       >
-        SEE ALL STATIONS
+        {t.pumps.seeAll}
       </button>
     </div>
   );
