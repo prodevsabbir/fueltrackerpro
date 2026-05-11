@@ -388,7 +388,7 @@ const StationDetails = ({ station, onBack }) => {
                           <button 
                             onClick={() => handleVote(c._id, 'up')}
                             className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${
-                              c.upvotes?.includes(currentUser?._id) ? 'text-emerald-600' : 'text-slate-400 hover:text-emerald-500'
+                              currentUser && c.upvotes?.some(id => id.toString() === currentUser._id.toString()) ? 'text-emerald-600' : 'text-slate-400 hover:text-emerald-500'
                             }`}
                           >
                              <ThumbsUp size={14} /> Confirm
@@ -396,7 +396,7 @@ const StationDetails = ({ station, onBack }) => {
                           <button 
                             onClick={() => handleVote(c._id, 'down')}
                             className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${
-                              c.downvotes?.includes(currentUser?._id) ? 'text-red-600' : 'text-slate-400 hover:text-red-500'
+                              currentUser && c.downvotes?.some(id => id.toString() === currentUser._id.toString()) ? 'text-red-600' : 'text-slate-400 hover:text-red-500'
                             }`}
                           >
                              <ThumbsDown size={14} /> False

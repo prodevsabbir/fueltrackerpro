@@ -285,9 +285,16 @@ const ManageHelpline = () => {
             >
               <ChevronLeft size={16} />
             </button>
-            {[...Array(totalPages)].map((_, i) => (
-              <PageBtn key={i} active={page === i + 1} onClick={() => setPage(i + 1)} label={(i + 1).toString()} />
-            ))}
+            {(() => {
+              const maxVisible = 7;
+              let start = Math.max(1, page - Math.floor(maxVisible / 2));
+              let end = Math.min(totalPages, start + maxVisible - 1);
+              if (end === totalPages) start = Math.max(1, end - maxVisible + 1);
+              
+              return Array.from({ length: end - start + 1 }, (_, i) => start + i).map(p => (
+                <PageBtn key={p} active={page === p} onClick={() => setPage(p)} label={p.toString()} />
+              ));
+            })()}
             <button 
               disabled={page >= totalPages} 
               onClick={() => setPage(p => p + 1)} 

@@ -297,9 +297,39 @@ const ManageStations = () => {
             <button disabled={meta.page<=1} onClick={() => setPage(p=>p-1)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-30">
               <ChevronLeft size={13} />
             </button>
-            {[...Array(Math.min(meta.totalPages||1, 5))].map((_,i) => (
-              <PageBtn key={i} active={meta.page===i+1} onClick={() => setPage(i+1)} label={(i+1).toString()} />
-            ))}
+            {(() => {
+              const totalPages = meta.totalPages || 1;
+              const currentPage = meta.page;
+              
+              const generatePages = (current, total) => {
+                if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+                const pages = [];
+                for (let i = 1; i <= total; i++) {
+                  if (i === 1 || i === total || (i >= current - 1 && i <= current + 1)) {
+                    pages.push(i);
+                  }
+                }
+                const withDots = [];
+                let prev = null;
+                for (let i of pages) {
+                  if (prev) {
+                    if (i - prev === 2) withDots.push(prev + 1);
+                    else if (i - prev > 2) withDots.push('...');
+                  }
+                  withDots.push(i);
+                  prev = i;
+                }
+                return withDots;
+              };
+
+              return generatePages(currentPage, totalPages).map((p, idx) => (
+                p === '...' ? (
+                  <span key={`dots-${idx}`} className="px-1 text-slate-400 font-black">...</span>
+                ) : (
+                  <PageBtn key={p} active={currentPage === p} onClick={() => setPage(p)} label={p.toString()} />
+                )
+              ));
+            })()}
             <button disabled={meta.page>=meta.totalPages} onClick={() => setPage(p=>p+1)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-30">
               <ChevronRight size={13} />
             </button>

@@ -14,6 +14,7 @@ const Stations = lazy(() => import('./pages/Stations/Index'));
 const StationDetail = lazy(() => import('./pages/StationDetail/Index'));
 const PumpDashboard = lazy(() => import('./pages/Dashboard/PumpDashboard'));
 const UserSettings = lazy(() => import('./pages/Dashboard/UserSettings'));
+const Intel = lazy(() => import('./pages/Intel/Index'));
 import MapPage from './pages/Map/Index';
 const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
 import ProtectedRoute from './components/shared/ProtectedRoute';
@@ -90,6 +91,7 @@ function App() {
             } />
             
             <Route path="/map" element={<MapPage />} />
+            <Route path="/intel" element={<Intel />} />
             <Route path="*" element={<Home />} />
           </Routes>
         </Suspense>

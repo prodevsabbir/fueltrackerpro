@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 
 const UserSettings = () => {
   const { t } = useLanguage();
+  const us = t.userSettings;
   const navigate = useNavigate();
   const { user, logout, updateUser, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
@@ -62,7 +63,7 @@ const UserSettings = () => {
     try {
       const response = await api.patch('/user/update-user', updateData);
       if (response.data.status === 'ok') {
-        toast.success('Profile updated successfully');
+        toast.success(us.profileUpdated);
         updateUser({ ...user, ...response.data.data });
       }
     } catch (error) {
@@ -75,7 +76,7 @@ const UserSettings = () => {
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      return toast.error('New passwords do not match');
+      return toast.error(us.passwordMismatch);
     }
     setLoading(true);
     try {
@@ -83,7 +84,7 @@ const UserSettings = () => {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
-      toast.success('Password updated successfully');
+      toast.success(us.passwordUpdated);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
       // Global toast handles this
@@ -105,7 +106,7 @@ const UserSettings = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (response.data.status === 'ok') {
-        toast.success('Profile picture updated');
+        toast.success(us.profilePicUpdated);
         updateUser({ ...user, profileImage: response.data.data.profileImage });
       }
     } catch (error) {
@@ -143,19 +144,19 @@ const UserSettings = () => {
   if (authLoading) return null;
 
   const menuItems = [
-    { id: 'profile', icon: User, label: 'Profile Settings', sub: 'Identity & Info' },
-    { id: 'activity', icon: History, label: 'My Activity', sub: 'Reports & Intel' },
-    { id: 'saved', icon: Bookmark, label: 'Saved Stations', sub: 'Quick Access' },
-    { id: 'helpline', icon: HelpCircle, label: t.helpline.support, sub: 'Support & Help' },
-    { id: 'security', icon: Shield, label: 'Security', sub: 'Password & Auth' },
+    { id: 'profile', icon: User, label: us.menuProfile, sub: us.menuProfileSub },
+    { id: 'activity', icon: History, label: us.menuActivity, sub: us.menuActivitySub },
+    { id: 'saved', icon: Bookmark, label: us.menuSaved, sub: us.menuSavedSub },
+    { id: 'helpline', icon: HelpCircle, label: t.helpline.support, sub: us.menuSupportSub },
+    { id: 'security', icon: Shield, label: us.menuSecurity, sub: us.menuSecuritySub },
   ];
 
   return (
     <div className="w-full flex flex-col items-center bg-[#FAFAFB] min-h-screen pt-28 pb-20 px-4">
       <div className="w-full max-w-6xl">
         <div className="mb-12 text-center">
-           <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Account <span className="text-amber-500">Settings</span></h1>
-           <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.4em] mt-3">Manage your digital fuel profile</p>
+           <h1 className="text-4xl font-black text-slate-900 tracking-tighter">{us.pageTitle} <span className="text-amber-500">{us.pageTitleHighlight}</span></h1>
+           <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.4em] mt-3">{us.pageSubtitle}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
@@ -185,7 +186,7 @@ const UserSettings = () => {
                     />
                  </div>
                  <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">{user?.name}</h2>
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{user?.role} • Member since {new Date(user?.createdAt || Date.now()).getFullYear()}</p>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{user?.role} • {us.memberSince} {new Date(user?.createdAt || Date.now()).getFullYear()}</p>
               </div>
 
               <div className="bg-white p-3 rounded-[40px] border border-slate-100 shadow-sm space-y-2">
@@ -215,7 +216,7 @@ const UserSettings = () => {
                   <div className="p-2.5 rounded-2xl bg-red-50 text-red-400 group-hover:text-red-600 transition-colors">
                     <LogOut size={18} />
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">{us.signOut}</span>
                 </button>
               </div>
            </div>
@@ -227,8 +228,8 @@ const UserSettings = () => {
                 <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                    <div className="mb-10 flex justify-between items-end">
                       <div>
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Identity Profile</h2>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Update your personal information</p>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">{us.profileTitle}</h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{us.profileSubtitle}</p>
                       </div>
                       <CheckCircle2 className="text-emerald-500" size={32} />
                    </div>
@@ -236,7 +237,7 @@ const UserSettings = () => {
                    <form onSubmit={handleUpdateProfile} className="space-y-8">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                          <div className="space-y-2">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{us.fullName}</label>
                             <div className="relative group">
                                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-amber-500 transition-colors" size={18} />
                                <input 
@@ -248,7 +249,7 @@ const UserSettings = () => {
                             </div>
                          </div>
                          <div className="space-y-2">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{us.emailAddress}</label>
                             <div className="relative group">
                                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-amber-500 transition-colors" size={18} />
                                <input 
@@ -263,7 +264,7 @@ const UserSettings = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Phone Number</label>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{us.phoneNumber}</label>
                             <div className="relative group">
                                <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-amber-500 transition-colors" size={18} />
                                <input 
@@ -276,7 +277,7 @@ const UserSettings = () => {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">City</label>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{us.city}</label>
                             <div className="relative group">
                                <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-amber-500 transition-colors" size={18} />
                                <input 
@@ -296,7 +297,7 @@ const UserSettings = () => {
                         className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-black transition-all shadow-2xl shadow-slate-900/10 mt-12 text-xs uppercase tracking-widest disabled:opacity-70"
                       >
                          {loading ? <Loader2 size={18} className="animate-spin text-amber-500" /> : <Save size={18} className="text-amber-500" />}
-                         Save Profile Changes
+                          {us.saveProfile}
                       </button>
                    </form>
                 </div>
@@ -305,13 +306,13 @@ const UserSettings = () => {
               {activeTab === 'security' && (
                 <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                    <div className="mb-10">
-                      <h2 className="text-2xl font-black text-slate-900 tracking-tight">Security & Privacy</h2>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Manage your password and session</p>
+                      <h2 className="text-2xl font-black text-slate-900 tracking-tight">{us.securityTitle}</h2>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{us.securitySubtitle}</p>
                    </div>
 
                    <form onSubmit={handleUpdatePassword} className="space-y-6">
                       <div className="space-y-2">
-                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Current Password</label>
+                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{us.currentPassword}</label>
                          <div className="relative group">
                             <Key className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-amber-500 transition-colors" size={18} />
                             <input 
@@ -326,7 +327,7 @@ const UserSettings = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                          <div className="space-y-2">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">New Password</label>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{us.newPassword}</label>
                             <input 
                               type="password" 
                               required
@@ -336,7 +337,7 @@ const UserSettings = () => {
                             />
                          </div>
                          <div className="space-y-2">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Confirm New Password</label>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{us.confirmPassword}</label>
                             <input 
                               type="password" 
                               required
@@ -353,7 +354,7 @@ const UserSettings = () => {
                         className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-black transition-all shadow-2xl shadow-slate-900/10 mt-12 text-xs uppercase tracking-widest disabled:opacity-70"
                       >
                          {loading ? <Loader2 size={18} className="animate-spin text-amber-500" /> : <Shield size={18} className="text-amber-500" />}
-                         Update Security Credentials
+                         {us.updateSecurity}
                       </button>
                    </form>
                 </div>
@@ -362,16 +363,16 @@ const UserSettings = () => {
               {activeTab === 'activity' && (
                 <div className="text-center py-20">
                    <History size={48} className="text-slate-100 mx-auto mb-4" />
-                   <h3 className="text-lg font-black text-slate-900 tracking-tight">No Recent Activity</h3>
-                   <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Your reports and intel will appear here</p>
+                   <h3 className="text-lg font-black text-slate-900 tracking-tight">{us.noActivity}</h3>
+                   <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">{us.noActivitySub}</p>
                 </div>
               )}
 
               {activeTab === 'saved' && (
                 <div className="text-center py-20">
                    <Bookmark size={48} className="text-slate-100 mx-auto mb-4" />
-                   <h3 className="text-lg font-black text-slate-900 tracking-tight">No Saved Stations</h3>
-                   <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Bookmark stations for quick tracking</p>
+                   <h3 className="text-lg font-black text-slate-900 tracking-tight">{us.noSaved}</h3>
+                   <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">{us.noSavedSub}</p>
                 </div>
               )}
 

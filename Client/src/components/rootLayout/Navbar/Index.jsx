@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Fuel, Menu, User, PlusCircle, Globe, X, Map as MapIcon, Settings, LogIn, LogOut, LayoutDashboard } from 'lucide-react';
+import { Fuel, Menu, User, PlusCircle, Globe, X, Map as MapIcon, Settings, LogIn, LogOut, LayoutDashboard, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../context/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +18,7 @@ const Navbar = () => {
   };
 
   const menuItems = [
+    { label: t.navbar.intel, icon: <Zap size={18} />, path: '/intel' },
     { label: t.pumps.viewMap, icon: <MapIcon size={18} />, path: '/map' },
     { label: t.navbar.register, icon: <PlusCircle size={18} />, path: '/register' },
   ];

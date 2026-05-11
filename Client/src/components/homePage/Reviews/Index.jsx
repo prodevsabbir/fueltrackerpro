@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { AlertCircle, ThumbsUp, ThumbsDown, User, ShieldCheck, MessageSquare, Loader2 } from 'lucide-react';
+import { AlertCircle, ThumbsUp, ThumbsDown, User, ShieldCheck, MessageSquare, Loader2, Navigation } from 'lucide-react';
 import { useLanguage } from '../../../context/LanguageContext';
+import { useAuth } from '../../../context/AuthContext';
 import { stationService } from '../../../helpers/stationService';
 import { toast } from 'react-toastify';
 import { formatTimeAgo } from '../../../helpers/dateUtils';
 
 const UserReports = () => {
   const { t } = useLanguage();
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -130,7 +132,7 @@ const UserReports = () => {
                   <button 
                     onClick={() => handleVote(report._id, 'up')}
                     className={`flex items-center gap-1.5 text-[10px] font-black transition-colors uppercase tracking-widest ${
-                      report.upvotes?.includes(report.userId?._id) ? 'text-emerald-600' : 'text-slate-400 hover:text-emerald-500'
+                      currentUser && report.upvotes?.some(id => id.toString() === currentUser._id.toString()) ? 'text-emerald-600' : 'text-slate-400 hover:text-emerald-500'
                     }`}
                   >
                     <ThumbsUp size={12} /> {t.reports.confirm}
@@ -138,7 +140,7 @@ const UserReports = () => {
                   <button 
                     onClick={() => handleVote(report._id, 'down')}
                     className={`flex items-center gap-1.5 text-[10px] font-black transition-colors uppercase tracking-widest ${
-                      report.downvotes?.includes(report.userId?._id) ? 'text-red-600' : 'text-slate-400 hover:text-red-500'
+                      currentUser && report.downvotes?.some(id => id.toString() === currentUser._id.toString()) ? 'text-red-600' : 'text-slate-400 hover:text-red-500'
                     }`}
                   >
                     <ThumbsDown size={12} /> False
@@ -159,6 +161,20 @@ const UserReports = () => {
           </div>
         )}
       </div>
+
+      {reports.length > 0 && (
+        <div className="mt-10 flex justify-center">
+           <button 
+             onClick={() => navigate('/intel')}
+             className="group bg-white border-2 border-slate-100 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 hover:border-amber-500 hover:text-amber-600 transition-all shadow-sm flex items-center gap-3 active:scale-95"
+           >
+             SEE ALL COMMUNITY REPORTS
+             <div className="w-6 h-6 bg-slate-50 rounded-lg flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all">
+                <Navigation size={12} className="rotate-90" />
+             </div>
+           </button>
+        </div>
+      )}
     </section>
   );
 };
