@@ -26,6 +26,6 @@ export const voteReview = asyncHandler(async (req: Request, res: Response) => {
   const { reviewId } = req.params;
   const { type } = req.body;
   const userId = (req as any).user?._id;
-  const review = await reviewService.voteReview(reviewId, userId, type);
+  const review = await reviewService.voteReview(reviewId as string, userId, type);
   ApiResponse.sendSuccess(res, 200, "Vote updated", review);
 });

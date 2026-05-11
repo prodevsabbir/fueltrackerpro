@@ -25,23 +25,156 @@ const getReviewsByStation = async (stationId: string) => {
 };
 
 const getAllReviews = async (query: any) => {
-  const { page = 1, limit = 10, rating } = query;
-  const skip = (Number(page) - 1) * Number(limit);
+  const { 
+    page = 1, 
+    limit = 10, 
+    rating, 
+    search, 
+    isOverprice, 
+    isVerified, 
+    sortBy = 'latest', 
+    lat, 
+    lng 
+  } = query;
   
-  let filter: any = { isDeleted: false };
-  if (rating && rating !== "all") {
-    filter.rating = Number(rating);
+  const skip = (Number(page) - 1) * Number(limit);
+  const pLimit = Number(limit);
+
+  let pipeline: any[] = [];
+
+  // 1. Handle Nearest Logic (Starts from Station)
+  if (sortBy === 'nearest' && lat && lng) {
+    pipeline.push({
+      $geoNear: {
+        near: { type: "Point", coordinates: [Number(lng), Number(lat)] },
+        distanceField: "distance",
+        spherical: true,
+        maxDistance: 100000, // 100km
+        key: "location.geo"
+      }
+    });
+
+    pipeline.push({
+      $lookup: {
+        from: "reviews",
+        localField: "_id",
+        foreignField: "stationId",
+        as: "review"
+      }
+    });
+
+    pipeline.push({ $unwind: "$review" });
+
+    pipeline.push({
+      $project: {
+        _id: "$review._id",
+        stationId: {
+          _id: "$_id",
+          name: "$name",
+          location: "$location",
+          distance: "$distance"
+        },
+        userId: "$review.userId",
+        userName: "$review.userName",
+        comment: "$review.comment",
+        rating: "$review.rating",
+        isOverprice: "$review.isOverprice",
+        reportedIssues: "$review.reportedIssues",
+        isVerified: "$review.isVerified",
+        upvotes: "$review.upvotes",
+        downvotes: "$review.downvotes",
+        createdAt: "$review.createdAt",
+        isDeleted: "$review.isDeleted"
+      }
+    });
+  } else {
+    // 1. Standard Logic (Starts from Review)
+    pipeline.push({ $match: { isDeleted: false } });
+    
+    pipeline.push({
+      $lookup: {
+        from: "stations",
+        localField: "stationId",
+        foreignField: "_id",
+        as: "stationId"
+      }
+    });
+    pipeline.push({ $unwind: "$stationId" });
   }
 
-  const [reviews, total] = await Promise.all([
-    ReviewModel.find(filter)
-      .populate("userId", "name email profileImage")
-      .populate("stationId", "name location")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit)),
-    ReviewModel.countDocuments(filter)
-  ]);
+  // 2. Lookup User details
+  pipeline.push({
+    $lookup: {
+      from: "users",
+      localField: "userId",
+      foreignField: "_id",
+      as: "userId"
+    }
+  });
+  pipeline.push({ $unwind: "$userId" });
+
+  // 3. Apply Filters
+  const matchFilters: any = { isDeleted: false };
+  if (rating && rating !== "all") matchFilters.rating = Number(rating);
+  if (isOverprice === 'true' || isOverprice === true) matchFilters.isOverprice = true;
+  if (isVerified === 'true' || isVerified === true) matchFilters.isVerified = true;
+  
+  if (search) {
+    matchFilters.$or = [
+      { "stationId.name": { $regex: search, $options: 'i' } },
+      { "stationId.location.address": { $regex: search, $options: 'i' } },
+      { "stationId.location.city": { $regex: search, $options: 'i' } },
+      { "stationId.location.area": { $regex: search, $options: 'i' } },
+      { "stationId.location.subArea": { $regex: search, $options: 'i' } },
+      { "comment": { $regex: search, $options: 'i' } }
+    ];
+  }
+  pipeline.push({ $match: matchFilters });
+
+  // 4. Sorting
+  if (sortBy === 'trust') {
+    pipeline.push({
+      $addFields: {
+        trustScore: {
+          $cond: {
+            if: { $eq: [{ $add: [{ $size: { $ifNull: ["$upvotes", []] } }, { $size: { $ifNull: ["$downvotes", []] } }] }, 0] },
+            then: 1,
+            else: { $divide: [{ $size: "$upvotes" }, { $add: [{ $size: "$upvotes" }, { $size: "$downvotes" }] }] }
+          }
+        }
+      }
+    });
+    pipeline.push({ $sort: { trustScore: -1, createdAt: -1 } });
+  } else if (sortBy === 'nearest' && lat && lng) {
+    pipeline.push({ $sort: { "stationId.distance": 1, createdAt: -1 } });
+  } else {
+    pipeline.push({ $sort: { createdAt: -1 } });
+  }
+
+  // 5. Final structure and pagination
+  pipeline.push({
+    $project: {
+      "userId.password": 0,
+      "userId.otp": 0,
+      "userId.otpExpires": 0,
+      "stationId.fuels": 0,
+      "stationId.facilities": 0
+    }
+  });
+
+  pipeline.push({
+    $facet: {
+      data: [{ $skip: skip }, { $limit: pLimit }],
+      totalCount: [{ $count: "count" }]
+    }
+  });
+
+  const result = (sortBy === 'nearest' && lat && lng) 
+    ? await StationModel.aggregate(pipeline)
+    : await ReviewModel.aggregate(pipeline);
+  
+  const reviews = result[0]?.data || [];
+  const total = result[0]?.totalCount[0]?.count || 0;
 
   return {
     reviews,
