@@ -204,6 +204,7 @@ const MapPage = () => {
   const { t } = useLanguage();
   
   const [userPos, setUserPos] = useState(null);
+  const [locationSource, setLocationSource] = useState('none'); // 'gps', 'profile', 'none'
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [stations, setStations] = useState([]);
   const [riders, setRiders] = useState({});
@@ -394,15 +395,29 @@ const MapPage = () => {
           if (Number.isFinite(lat)) { 
              const coords = [lat, lng];
              setUserPos(coords); 
+             setLocationSource('gps');
              if (!initialFetchDone.current) refreshMapData(lat, lng, true);
           }
         },
-        () => {},
+        (error) => {
+          console.error("Geolocation denied", error);
+          if (user?.location?.coordinates) {
+            const [lng, lat] = user.location.coordinates;
+            setUserPos([lat, lng]);
+            setLocationSource('profile');
+            if (!initialFetchDone.current) refreshMapData(lat, lng, true);
+          }
+        },
         { enableHighAccuracy: true }
       );
       return () => navigator.geolocation.clearWatch(watchId);
+    } else if (user?.location?.coordinates) {
+      const [lng, lat] = user.location.coordinates;
+      setUserPos([lat, lng]);
+      setLocationSource('profile');
+      if (!initialFetchDone.current) refreshMapData(lat, lng, true);
     }
-  }, [refreshMapData]);
+  }, [refreshMapData, user]);
 
   const socketRef = useRef(null);
 
@@ -678,6 +693,19 @@ const MapPage = () => {
               {searching && <Loader2 size={12} className="text-amber-500 animate-spin" />}
            </div>
            
+           {locationSource === 'profile' && (
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }} 
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-amber-50/95 backdrop-blur-md border border-amber-200 rounded-2xl p-2.5 md:p-3 flex items-center gap-3 text-amber-800 shadow-xl"
+              >
+                <ShieldAlert size={16} className="shrink-0 text-amber-600" />
+                <p className="text-[9px] md:text-[10px] font-black uppercase tracking-wider leading-tight">
+                  {t.pumps.locationWarning}
+                </p>
+              </motion.div>
+            )}
+
            <AnimatePresence>
              {showControls && (
                <motion.div 

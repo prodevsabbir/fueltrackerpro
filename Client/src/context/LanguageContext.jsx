@@ -10,7 +10,8 @@ export const translations = {
       intel: "Real-time Intel",
       dashboard: "Dashboard",
       settings: "Settings",
-      logout: "Sign Out"
+      logout: "Sign Out",
+      about: "About"
     },
     hero: {
       live: "Live Updates",
@@ -74,6 +75,7 @@ export const translations = {
       unit: "/Ltr",
       seeAll: "SEE ALL STATIONS",
       trustScore: "COMMUNITY TRUST",
+      locationWarning: "Using saved profile location. Enable GPS for real-time local updates.",
       nearest: "NEAREST FIRST"
     },
     map: {
@@ -218,6 +220,49 @@ export const translations = {
       passwordUpdated: "Password updated successfully",
       passwordMismatch: "New passwords do not match",
       profilePicUpdated: "Profile picture updated"
+    },
+    about: {
+      badge: "Project Overview",
+      subtitle: "Bridging the gap between fuel scarcity and smart mobility through real-time community intelligence.",
+      problem: {
+        title: "The Problem",
+        desc: "During fuel shortages, drivers waste hours hopping from one station to another, burning more fuel in the search than they find. Lack of real-time data leads to massive queues, traffic congestion, and immense public frustration."
+      },
+      solution: {
+        title: "Our Solution",
+        desc: "FuelTracker leverages Crowdsourced Intel. By allowing riders on the road to report real-time availability and prices, we create a live map of fuel intelligence. Save time, save fuel, and find exactly what you need, when you need it."
+      },
+      functions: {
+        title: "Core Functionalities",
+        admin: {
+          title: "Admin Suite",
+          f1: { t: "System Analytics", d: "Monitor total users, stations, and fuel demand patterns across the country." },
+          f2: { t: "Station Moderation", d: "Review and verify new station registrations to ensure platform trust." },
+          f3: { t: "Health Monitoring", d: "Live tracking of Database, API, and Cloud services for 99.9% uptime." },
+          f4: { t: "Danger Zone Control", d: "Authorized access to system-wide resets and cache clearing via 2FA OTP." }
+        },
+        owner: {
+          title: "Owner Portal",
+          f1: { t: "Inventory Control", d: "Instantly update availability status (Available/Limited/Out) for all fuel types." },
+          f2: { t: "Dynamic Pricing", d: "Adjust fuel prices in seconds to reflect the latest government or market rates." },
+          f3: { t: "Profile Management", d: "Showcase facilities like Prayer Rooms, Restrooms, and Convenience Stores." },
+          f4: { t: "Reputation Tracking", d: "Monitor rider feedback and ratings to improve service quality and visibility." }
+        },
+        rider: {
+          title: "Rider Experience",
+          f1: { t: "Discovery & Intel", d: "Report fuel availability on the go and earn Reputation Points for accuracy." },
+          f2: { t: "Interactive Maps", d: "Find nearest stations and filter them by fuel type and facility availability." },
+          f3: { t: "Real-time Alerts", d: "Stay informed about station status updates within your preferred radius." },
+          f4: { t: "Trust Scores", d: "View community-verified data with trust markers to avoid misinformation." }
+        }
+      },
+      tech: {
+        title: "The Technology Core"
+      },
+      dev: {
+        badge: "Meet the Developer",
+        social: { github: "GitHub", linkedin: "LinkedIn", website: "Portfolio" }
+      }
     }
   },
   bn: {
@@ -227,7 +272,8 @@ export const translations = {
       intel: "রিয়েল-টাইম তথ্য",
       dashboard: "ড্যাশবোর্ড",
       settings: "সেটিংস",
-      logout: "লগ আউট"
+      logout: "লগ আউট",
+      about: "প্রজেক্ট তথ্য"
     },
     hero: {
       live: "সরাসরি আপডেট",
@@ -291,6 +337,7 @@ export const translations = {
       unit: "/লিটার",
       seeAll: "সব স্টেশন দেখুন",
       trustScore: "কমিউনিটি ট্রাস্ট",
+      locationWarning: "প্রোফাইল লোকেশন ব্যবহার করা হচ্ছে। সঠিক আপডেটের জন্য জিপিএস চালু করুন।",
       nearest: "কাছাকাছি আগে"
     },
     map: {
@@ -435,6 +482,49 @@ export const translations = {
       passwordUpdated: "পাসওয়ার্ড সফলভাবে আপডেট হয়েছে",
       passwordMismatch: "নতুন পাসওয়ার্ড মেলেনি",
       profilePicUpdated: "প্রোফাইল ছবি আপডেট হয়েছে"
+    },
+    about: {
+      badge: "প্রজেক্ট ওভারভিউ",
+      subtitle: "রিয়েল-টাইম কমিউনিটি ইন্টেলিজেন্সের মাধ্যমে জ্বালানি সংকট এবং স্মার্ট চলাচলের মধ্যে দূরত্ব কমিয়ে আনা।",
+      problem: {
+        title: "সমস্যা",
+        desc: "জ্বালানি সংকটের সময় চালকরা এক স্টেশন থেকে অন্য স্টেশনে ঘণ্টার পর ঘণ্টা সময় নষ্ট করেন, যা জ্বালানি খোঁজার চেয়ে বেশি জ্বালানি খরচ করে। রিয়েল-টাইম তথ্যের অভাবে বিশাল লাইন, যানজট এবং জনভোগান্তির সৃষ্টি হয়।"
+      },
+      solution: {
+        title: "আমাদের সমাধান",
+        desc: "ফুয়েল ট্র্যাকার ক্রাউডসোর্সড ইন্টেল ব্যবহার করে। রাস্তায় থাকা রাইডারদের রিয়েল-টাইম প্রাপ্যতা এবং দাম রিপোর্ট করার সুযোগ দিয়ে আমরা জ্বালানি তথ্যের একটি লাইভ ম্যাপ তৈরি করি। সময় বাঁচান, জ্বালানি বাঁচান এবং আপনার যা প্রয়োজন তা সঠিক সময়ে খুঁজে পান।"
+      },
+      functions: {
+        title: "মূল কার্যকারিতা",
+        admin: {
+          title: "অ্যাডমিন স্যুইট",
+          f1: { t: "সিস্টেম অ্যানালিটিক্স", d: "দেশজুড়ে মোট ব্যবহারকারী, স্টেশন এবং জ্বালানির চাহিদার ধরণ পর্যবেক্ষণ করুন।" },
+          f2: { t: "স্টেশন মডারেশন", d: "প্ল্যাটফর্মের বিশ্বাসযোগ্যতা নিশ্চিত করতে নতুন স্টেশন নিবন্ধন পর্যালোচনা এবং যাচাই করুন।" },
+          f3: { t: "হেলথ মনিটরিং", d: "৯৯.৯% আপটাইমের জন্য ডেটাবেস, এপিআই এবং ক্লাউড সার্ভিসের লাইভ ট্র্যাকিং।" },
+          f4: { t: "ডেঞ্জার জোন কন্ট্রোল", d: "২এফএ ওটিপি-র মাধ্যমে সিস্টেম-ওয়াইড রিসেট এবং ক্যাশে ক্লিয়ারিংয়ের অনুমোদিত অ্যাক্সেস।" }
+        },
+        owner: {
+          title: "মালিক পোর্টাল",
+          f1: { t: "ইনভেন্টরি কন্ট্রোল", d: "সব ধরনের জ্বালানির জন্য তাৎক্ষণিকভাবে প্রাপ্যতার স্ট্যাটাস আপডেট করুন।" },
+          f2: { t: "ডায়নামিক প্রাইসিং", d: "সরকারি বা বাজারের সর্বশেষ হার অনুযায়ী সেকেন্ডের মধ্যে জ্বালানির দাম সমন্বয় করুন।" },
+          f3: { t: "প্রোফাইল ম্যানেজমেন্ট", d: "নামাজের ঘর, বিশ্রামাগার এবং কনভিনিয়েন্স স্টোরের মতো সুবিধাগুলো প্রদর্শন করুন।" },
+          f4: { t: "রেপুটেশন ট্র্যাকিং", d: "সেবার মান এবং দৃশ্যমানতা বাড়াতে রাইডারদের ফিডব্যাক এবং রেটিং পর্যবেক্ষণ করুন।" }
+        },
+        rider: {
+          title: "রাইডার অভিজ্ঞতা",
+          f1: { t: "ডিসকভারি ও ইন্টেল", d: "চলাচলের সময় জ্বালানির প্রাপ্যতা রিপোর্ট করুন এবং নির্ভুলতার জন্য রেপুটেশন পয়েন্ট অর্জন করুন।" },
+          f2: { t: "ইন্টারেক্টিভ ম্যাপ", d: "নিকটস্থ স্টেশনগুলো খুঁজুন এবং জ্বালানির ধরন ও সুবিধার ভিত্তিতে ফিল্টার করুন।" },
+          f3: { t: "রিয়েল-টাইম অ্যালার্ট", d: "আপনার পছন্দের ব্যাসার্ধের মধ্যে স্টেশনের স্ট্যাটাস আপডেট সম্পর্কে অবগত থাকুন।" },
+          f4: { t: "ট্রাস্ট স্কোর", d: "ভুল তথ্য এড়াতে ট্রাস্ট মার্কারসহ কমিউনিটি-ভেরিফাইড ডেটা দেখুন।" }
+        }
+      },
+      tech: {
+        title: "প্রযুক্তিগত মূল ভিত্তি"
+      },
+      dev: {
+        badge: "ডেভেলপারের সাথে পরিচিত হন",
+        social: { github: "গিটহাব", linkedin: "লিঙ্কডইন", website: "পোর্টফোলিও" }
+      }
     }
   }
 };

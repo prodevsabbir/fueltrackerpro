@@ -11,6 +11,16 @@ const systemSettingsSchema = new Schema<ISystemSettings>({
   requireEmailVerification: { type: Boolean, default: true },
   sessionTimeoutMinutes: { type: Number, default: 60 },
   maxFailedLoginAttempts: { type: Number, default: 5 },
+  developerInfo: {
+    name: { type: String, default: "Sabbir Hossain" },
+    role: { type: String, default: "Full Stack Developer" },
+    email: { type: String, default: "prodev.sabbir@gmail.com" },
+    website: { type: String, default: "https://sabbirhossain.com" },
+    github: { type: String, default: "https://github.com/prodevsabbir" },
+    linkedin: { type: String, default: "https://linkedin.com/in/prodevsabbir" },
+    description: { type: String, default: "Passionate about building scalable web applications and solving real-world problems through technology." },
+    imageUrl: { type: String, default: "https://avatars.githubusercontent.com/u/85465545?v=4" }
+  }
 }, { timestamps: true });
 
 export const SystemSettingsModel = mongoose.model<ISystemSettings>("SystemSettings", systemSettingsSchema);

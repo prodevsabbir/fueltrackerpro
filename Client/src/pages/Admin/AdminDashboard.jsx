@@ -19,7 +19,8 @@ import Analytics from './components/Analytics';
 import Notifications from './components/Notifications';
 import SettingsComponent from './components/Settings';
 import ManageHelpline from './components/ManageHelpline';
-import { HelpCircle } from 'lucide-react';
+import { adminService } from '../../helpers/adminService';
+import { HelpCircle, Loader2 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { key: 'overview',      icon: LayoutDashboard,     label: 'Overview',       group: 'main' },
@@ -40,6 +41,23 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
+
+  React.useEffect(() => {
+    const fetchAlertCount = async () => {
+      try {
+        const data = await adminService.getDashboardStats();
+        const unread = data?.alerts?.filter(a => !a.read).length || 0;
+        setUnreadAlerts(unread);
+      } catch (error) {
+        console.error("Failed to fetch alert count", error);
+      }
+    };
+    fetchAlertCount();
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchAlertCount, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -153,7 +171,7 @@ const AdminDashboard = () => {
             {NAV_ITEMS.filter(n => n.group === 'system').map(item => (
               <SidebarItem key={item.key} icon={item.icon} label={item.label}
                 active={activeTab === item.key} onClick={() => handleNav(item.key)}
-                badge={item.key === 'notifications' ? 2 : undefined}
+                badge={item.key === 'notifications' ? unreadAlerts : undefined}
               />
             ))}
           </div>
@@ -214,7 +232,7 @@ const AdminDashboard = () => {
               className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 border border-slate-100 hover:bg-amber-50 hover:border-amber-200 transition-all text-slate-500 hover:text-amber-600"
             >
               <Bell size={16} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white shadow-sm" />
+              {unreadAlerts > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white shadow-sm" />}
             </button>
 
             {/* Divider */}

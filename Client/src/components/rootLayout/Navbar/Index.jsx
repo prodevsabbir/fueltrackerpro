@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Fuel, Menu, User, PlusCircle, Globe, X, Map as MapIcon, Settings, LogIn, LogOut, LayoutDashboard, Zap } from 'lucide-react';
+import { Fuel, Menu, User, PlusCircle, Globe, X, Map as MapIcon, Settings, LogIn, LogOut, LayoutDashboard, Zap, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../context/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +20,7 @@ const Navbar = () => {
   const menuItems = [
     { label: t.navbar.intel, icon: <Zap size={18} />, path: '/intel' },
     { label: t.pumps.viewMap, icon: <MapIcon size={18} />, path: '/map' },
+    { label: t.navbar.about, icon: <Info size={18} />, path: '/about' },
     { label: t.navbar.register, icon: <PlusCircle size={18} />, path: '/register' },
   ];
 
@@ -86,6 +87,11 @@ const Navbar = () => {
                      <Link to="/settings" className="flex items-center gap-3 px-4 py-2.5 text-[10px] font-black text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition-all uppercase tracking-widest">
                         <Settings size={16} className="text-slate-400" />
                         {t.navbar.settings}
+                     </Link>
+
+                     <Link to="/about" className="flex items-center gap-3 px-4 py-2.5 text-[10px] font-black text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition-all uppercase tracking-widest">
+                        <Info size={16} className="text-slate-400" />
+                        {t.navbar.about}
                      </Link>
 
                      <button 

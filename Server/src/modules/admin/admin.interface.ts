@@ -10,4 +10,14 @@ export interface ISystemSettings extends Document {
   requireEmailVerification: boolean;
   sessionTimeoutMinutes: number;
   maxFailedLoginAttempts: number;
+  developerInfo: {
+    name: string;
+    role: string;
+    email: string;
+    website: string;
+    github: string;
+    linkedin: string;
+    description: string;
+    imageUrl?: string;
+  };
 }

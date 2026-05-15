@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Fuel, MapPin, Clock, Verified, Star, ChevronRight, Navigation } from 'lucide-react';
 import { useLanguage } from '../../../context/LanguageContext';
+import { useAuth } from '../../../context/AuthContext';
+import { AlertCircle } from 'lucide-react';
 import { StationCardSkeleton } from '../../shared/Skeleton';
 import { stationService } from '../../../helpers/stationService';
 import { formatTimeAgo } from '../../../helpers/dateUtils';
@@ -27,8 +29,10 @@ const PumpList = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
   const [coords, setCoords] = useState(null);
+  const [locationSource, setLocationSource] = useState('none'); // 'gps', 'profile', 'none'
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const isMobile = window.innerWidth < 768;
 
   const categories = useMemo(() => [
@@ -38,7 +42,7 @@ const PumpList = () => {
     { id: 'diesel', name: t.pumps.diesel.toUpperCase() }
   ], [t]);
 
-  // 🛰️ GEOLOCATION INTELLIGENCE: Capture user's live position
+  // 🛰️ GEOLOCATION INTELLIGENCE: Capture user's live position with profile fallback
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -47,11 +51,24 @@ const PumpList = () => {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
+          setLocationSource('gps');
         },
-        (error) => console.error("Geolocation denied", error)
+        (error) => {
+          console.error("Geolocation denied", error);
+          // Fallback to user profile location if available
+          if (user?.location?.coordinates) {
+            const [lng, lat] = user.location.coordinates;
+            setCoords({ lat, lng });
+            setLocationSource('profile');
+          }
+        }
       );
+    } else if (user?.location?.coordinates) {
+      const [lng, lat] = user.location.coordinates;
+      setCoords({ lat, lng });
+      setLocationSource('profile');
     }
-  }, []);
+  }, [user]);
 
   const fetchNearby = async () => {
     setLoading(true);
@@ -96,7 +113,7 @@ const PumpList = () => {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between px-2 mb-8">
+      <div className="flex items-center justify-between px-2 mb-6">
         <div>
           <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">{t.pumps.title}</h2>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t.pumps.subtitle}</p>
@@ -105,6 +122,19 @@ const PumpList = () => {
           {t.pumps.viewMap} <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
+
+      {locationSource === 'profile' && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }} 
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-2 mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800"
+        >
+          <AlertCircle size={16} className="shrink-0" />
+          <p className="text-[10px] font-bold uppercase tracking-wider leading-tight">
+            {t.pumps.locationWarning}
+          </p>
+        </motion.div>
+      )}
 
       <div className="flex gap-1.5 md:gap-2 overflow-x-auto pb-4 md:pb-6 scrollbar-hide px-2">
         {categories.map(cat => (

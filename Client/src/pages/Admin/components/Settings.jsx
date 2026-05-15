@@ -11,7 +11,17 @@ const Settings = () => {
     allowRegistrations: true,
     requireEmailVerification: true,
     sessionTimeout: 60,
-    maxFailedLogins: 5
+    maxFailedLogins: 5,
+    developerInfo: {
+      name: "",
+      role: "",
+      email: "",
+      website: "",
+      github: "",
+      linkedin: "",
+      description: "",
+      imageUrl: ""
+    }
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,6 +47,16 @@ const Settings = () => {
 
   const handleChange = (key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleDevInfoChange = (key, value) => {
+    setSettings(prev => ({
+      ...prev,
+      developerInfo: {
+        ...prev.developerInfo,
+        [key]: value
+      }
+    }));
   };
 
   const handleSave = async () => {
@@ -198,6 +218,50 @@ const Settings = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-slate-400">Max Failed Login Attempts</label>
               <input type="number" value={settings.maxFailedLogins} onChange={e => handleChange('maxFailedLogins', Number(e.target.value))} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Developer Intel */}
+      <div className="bg-white rounded-2xl md:rounded-[24px] border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-4 md:p-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
+          <div className="bg-blue-100 p-2 rounded-xl text-blue-600"><SettingsIcon size={16} md={20} /></div>
+          <h3 className="text-[10px] md:text-sm font-black uppercase tracking-widest text-slate-800">Developer Intel (About Page)</h3>
+        </div>
+        <div className="p-4 md:p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400">Developer Name</label>
+              <input type="text" value={settings.developerInfo?.name} onChange={e => handleDevInfoChange('name', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400">Professional Role</label>
+              <input type="text" value={settings.developerInfo?.role} onChange={e => handleDevInfoChange('role', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400">Public Email</label>
+              <input type="email" value={settings.developerInfo?.email} onChange={e => handleDevInfoChange('email', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400">Website / Portfolio</label>
+              <input type="url" value={settings.developerInfo?.website} onChange={e => handleDevInfoChange('website', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400">GitHub Profile</label>
+              <input type="url" value={settings.developerInfo?.github} onChange={e => handleDevInfoChange('github', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400">LinkedIn Profile</label>
+              <input type="url" value={settings.developerInfo?.linkedin} onChange={e => handleDevInfoChange('linkedin', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all" />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-[10px] font-black uppercase text-slate-400">Image URL</label>
+              <input type="url" value={settings.developerInfo?.imageUrl} onChange={e => handleDevInfoChange('imageUrl', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all" />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-[10px] font-black uppercase text-slate-400">Short Bio / Description</label>
+              <textarea rows={3} value={settings.developerInfo?.description} onChange={e => handleDevInfoChange('description', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all" />
             </div>
           </div>
         </div>

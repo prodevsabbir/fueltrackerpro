@@ -1,33 +1,36 @@
-# 🛍️ Welcome to YourMart_Ecommerce
+# 💻 FuelTracker Frontend
 
-Welcome to **YourMart_Ecommerce** — a modern and user-friendly eCommerce platform currently under active development.  
-The project aims to provide a seamless online shopping experience for both customers and administrators through a powerful, full-stack web application.
+This is the frontend client for **FuelTracker Pro**, built with React, Vite, and Tailwind CSS.
+
+## 🛠️ Features
+- **Modern UI/UX**: Clean, responsive design with Lucide icons and Framer Motion.
+- **Interactive Maps**: Visualize fuel stations with real-time availability.
+- **Role-Based Dashboards**: Specific views for Admins, Station Owners, and Riders.
+- **Dynamic Localization**: Multi-language support (English/Bangla).
+- **Smooth Navigation**: Client-side routing with React Router.
+
+## 🏃‍♂️ Quick Start
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Configure Environment:
+   ```bash
+   cp .env.example .env
+   ```
+   Set `VITE_API_BASE_URL` to your backend server URL.
+
+3. Run Development Server:
+   ```bash
+   npm run dev
+   ```
+
+4. Build for Production:
+   ```bash
+   npm run build
+   ```
 
 ---
-
-## 🌟 Basic Overview
-
-**YourMart_Ecommerce** is being built with scalability, performance, and simplicity in mind.  
-It focuses on creating a smooth digital marketplace that allows users to browse, search, and purchase products with ease, while offering administrators full control over inventory, categories, brands, and orders.
-
-### 🔧 Key Features (in progress)
-- 🧾 **Dynamic Product Management** — Add, edit, and manage products effortlessly.  
-- 🧍‍♂️ **User Authentication** — Secure login and registration system.  
-- 🛒 **Smart Cart System** — Real-time cart updates and checkout flow.  
-- 📦 **Order Tracking** — Manage orders and view their status easily.  
-- 🧭 **Admin Dashboard** — Centralized control for products, users, and analytics.  
-
----
-
-### ⚙️ Tech Stack (planned)
-- **Frontend:** React, Tailwind CSS, ShadCN/UI  
-- **Backend:** Node.js, Express.js  
-- **Database:** MongoDB  
-- **Authentication:** JWT / Firebase  
-- **Deployment:** Vercel / Render (TBD)
-
----
-
-🚧 **Note:**  
-This project is currently under development.  
-More features, modules, and detailed documentation will be added as the project evolves.
+For full project details, please refer to the [Main README](../README.md).

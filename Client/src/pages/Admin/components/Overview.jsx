@@ -152,8 +152,8 @@ const Overview = () => {
              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-[#3E291D]"><Activity size={20} /></div>
                 <div>
-                   <p className="text-xs font-black text-white">System Load: Normal</p>
-                   <p className="text-[9px] font-bold text-white/40">Healthy Latency: 42ms</p>
+                   <p className="text-xs font-black text-white">System Load: {stats?.serverHealth?.server?.status === 'operational' ? 'Normal' : 'High'}</p>
+                   <p className="text-[9px] font-bold text-white/40">Network Latency: {stats?.serverHealth?.server?.value || '0ms'}</p>
                 </div>
              </div>
           </div>

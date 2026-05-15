@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getSettings, updateSettings, getStats, requestDangerOtp, verifyDangerAction } from "./admin.controller";
 import { authGuard } from "../../middleware/auth.middleware";
 import { permission } from "../../middleware/permission.middleware";
+import { otpLimiter } from "../../middleware/rateLimiter.middleware";
 
 const router = Router();
 
@@ -12,7 +13,7 @@ router.get("/settings", getSettings);
 router.patch("/settings", updateSettings);
 router.get("/stats", getStats);
 
-router.post("/danger/request-otp", requestDangerOtp);
+router.post("/danger/request-otp", otpLimiter, requestDangerOtp);
 router.post("/danger/verify-action", verifyDangerAction);
 
 export default router;

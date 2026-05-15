@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Fuel, MapPin, Verified, Star, ArrowLeft, Search, Filter, ChevronLeft, ChevronRight, SlidersHorizontal, Navigation, Clock, Loader2, Globe } from 'lucide-react';
+import { Fuel, MapPin, Verified, Star, ArrowLeft, Search, Filter, ChevronLeft, ChevronRight, SlidersHorizontal, Navigation, Clock, Loader2, Globe, ShieldAlert } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { stationService } from '../../helpers/stationService';
 import { toast } from 'react-toastify';
@@ -62,7 +62,8 @@ const Stations = () => {
   const itemsPerPage = 12;
   
   const [userLocation, setUserLocation] = useState(null);
-  const [locationErrorShown, setLocationErrorShown] = useState(false);
+  const [locationSource, setLocationSource] = useState('none'); // 'gps', 'profile', 'none'
+  const initialFetchDone = useRef(false);
 
   const categories = useMemo(() => [
     { id: 'all', name: 'ALL' },
@@ -85,35 +86,33 @@ const Stations = () => {
 
   // ── INTELLIGENT LOCATION DETECTION ──
   useEffect(() => {
-    const locateUser = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
-          },
-          (error) => {
-            if (user?.location?.coordinates) {
-              setUserLocation({ lat: user.location.coordinates[1], lng: user.location.coordinates[0] });
-            } else if (!locationErrorShown) {
-              toast.warning("Please turn on location to find nearby stations accurately.", { autoClose: 5000 });
-              setLocationErrorShown(true);
-            }
+    if ("geolocation" in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          if (Number.isFinite(lat)) { 
+             setUserLocation({ lat, lng }); 
+             setLocationSource('gps');
           }
-        );
-      } else {
-        if (user?.location?.coordinates) {
-          setUserLocation({ lat: user.location.coordinates[1], lng: user.location.coordinates[0] });
-        } else if (!locationErrorShown) {
-          toast.warning("Location not supported. Please update profile or turn on GPS.", { autoClose: 5000 });
-          setLocationErrorShown(true);
-        }
-      }
-    };
-    
-    if (!userLocation) {
-      locateUser();
+        },
+        (error) => {
+          console.error("Geolocation denied", error);
+          if (user?.location?.coordinates) {
+            const [lng, lat] = user.location.coordinates;
+            setUserLocation({ lat, lng });
+            setLocationSource('profile');
+          }
+        },
+        { enableHighAccuracy: true }
+      );
+      return () => navigator.geolocation.clearWatch(watchId);
+    } else if (user?.location?.coordinates) {
+      const [lng, lat] = user.location.coordinates;
+      setUserLocation({ lat, lng });
+      setLocationSource('profile');
     }
-  }, [user, locationErrorShown, userLocation]);
+  }, [user]);
 
   const fetchStations = async () => {
     setLoading(true);
@@ -189,6 +188,19 @@ const Stations = () => {
             />
           </div>
         </div>
+
+        {locationSource === 'profile' && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full mb-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 text-amber-800 shadow-sm"
+          >
+            <ShieldAlert size={18} className="shrink-0 text-amber-600" />
+            <p className="text-[10px] md:text-xs font-black uppercase tracking-widest leading-tight">
+              {t.pumps.locationWarning}
+            </p>
+          </motion.div>
+        )}
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-6 border-b border-slate-100">
            <div className="flex p-1 bg-slate-100/80 backdrop-blur-sm rounded-2xl overflow-x-auto scrollbar-hide">

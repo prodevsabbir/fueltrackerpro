@@ -17,6 +17,7 @@ const UserSettings = lazy(() => import('./pages/Dashboard/UserSettings'));
 const Intel = lazy(() => import('./pages/Intel/Index'));
 import MapPage from './pages/Map/Index';
 const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
+const About = lazy(() => import('./pages/About/Index'));
 import ProtectedRoute from './components/shared/ProtectedRoute';
 import LocationTracker from './components/shared/LocationTracker';
 import Helpline from './components/shared/Helpline';
@@ -92,6 +93,7 @@ function App() {
             
             <Route path="/map" element={<MapPage />} />
             <Route path="/intel" element={<Intel />} />
+            <Route path="/about" element={<About />} />
             <Route path="*" element={<Home />} />
           </Routes>
         </Suspense>

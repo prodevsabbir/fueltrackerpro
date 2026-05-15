@@ -47,7 +47,8 @@ export const adminService = {
         cloudinary: { value: "Unknown", status: "warning" },
         authentication: { value: "Unknown", status: "warning" }
       },
-      trafficData: data.trafficData || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      trafficData: data.trafficData || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      alerts: data.alerts || []
     };
   },
 
